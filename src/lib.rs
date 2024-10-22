@@ -1,6 +1,7 @@
 //
 #![doc = include_str!("./Lib.md")]
 #![warn(clippy::all)]
+#![allow(clippy::doc_lazy_continuation, clippy::module_inception)]
 #![cfg_attr(not(any(feature = "std", feature = "no_std")), allow(unused))]
 // nightly, safety, environment
 #![cfg_attr(feature = "nightly", feature(doc_cfg))]
@@ -123,14 +124,12 @@ pub mod stroke;
 pub mod transform;
 
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-pub use {
-    alphamask::*, pixfmt::*,
-};
+pub use {alphamask::*, pixfmt::*};
 #[doc(hidden)]
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 pub use {
-    base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*,
-    raster::*, render::*, stroke::*, transform::*,
+    base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*, raster::*,
+    render::*, stroke::*, transform::*,
 };
 
 /* std */

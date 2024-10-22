@@ -2,7 +2,7 @@
 
 [![Crate](https://img.shields.io/crates/v/agrega.svg)](https://crates.io/crates/agrega)
 [![API](https://docs.rs/agrega/badge.svg)](https://docs.rs/agrega/)
-[![MSRV: 1.73.0](https://flat.badgen.net/badge/MSRV/1.73.0/purple)](https://releases.rs/docs/1.73.0/)
+[![MSRV: 1.82.0](https://flat.badgen.net/badge/MSRV/1.82.0/purple)](https://releases.rs/docs/1.82.0/)
 
 A Rust port of [Anti-Grain Geometry](https://agg.sourceforge.net/antigrain.com/).
 

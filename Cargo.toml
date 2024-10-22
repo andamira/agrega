@@ -3,7 +3,7 @@ name = "agrega"
 description = "High-quality 2D graphics engine based on Anti-grain Geometry"
 version = "0.1.1"
 edition = "2021"
-rust-version = "1.73.0"
+rust-version = "1.82.0" # sync with README.md
 authors = [
 	"Maxim Shemanarev (McSeem)",
 	"Brian Savage <savage13@gmail.com>",
@@ -13,11 +13,10 @@ authors = [
 repository = "https://github.com/andamira/agrega"
 license = "BSD-2-Clause"
 include = [
-	"/src/**/*.rs",
+	"/src/**/*.rs", "/src/**/*.md",
 	"/Cargo.toml",
 	"/LICENSE*",
 	"/README.md",
-	"/images",
 ]
 categories = ["rendering::graphics-api", "no-std"]
 keywords = ["2d", "graphics"]
@@ -52,3 +51,7 @@ features = ["png", "gif", "pnm", "bmp", "jpeg"]
 [package.metadata.docs.rs]
 no-default-features = true
 features = ["docsrs"]
+
+[[example]]
+name = "triangle"
+required-features = ["std"]

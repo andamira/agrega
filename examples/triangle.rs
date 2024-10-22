@@ -9,7 +9,7 @@ fn main() {
     let mut ren_base = RenderingBase::new(pix);
     ren_base.clear(Rgba8::white());
 
-    // Draw a polygon from (10,10) - (50,90) - (90,10)
+    // Draw a polygon from (10, 10) - (50, 90) - (90, 10)
     let mut ras = RasterizerScanline::new();
     ras.move_to(10.0, 10.0);
     ras.line_to(50.0, 90.0);
