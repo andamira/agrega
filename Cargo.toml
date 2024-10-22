@@ -26,8 +26,8 @@ publish = true
 # for now, almost everything depends on alloc
 default = ["alloc"]
 
-std = ["alloc"]
-alloc = []
+std = ["alloc", "devela/std"]
+alloc = ["devela/alloc"]
 no_std = ["devela/libm"]
 safe = []
 unsafe = []
@@ -38,13 +38,14 @@ docsrs = ["nightly", "std", "freetype-rs"]
 
 
 [dependencies]
-devela = { version = "0.18", features = ["ops"] }
+devela = { version = "0.21.2", features = ["_float_f32", "_float_f64"] }
 
-freetype-rs = { version = "0.32.0", optional = true }
+freetype-rs = { version = "0.37", optional = true }
 # font-loader = "0.11.0"
 
 [dependencies.image]
-version = "0.24.7"
+version = "0.25.4"
+# optional = true # TODO
 default-features = false
 features = ["png", "gif", "pnm", "bmp", "jpeg"]
 

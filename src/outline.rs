@@ -30,8 +30,8 @@ use crate::{
     base::RenderingBase, color::Rgba8, paths::PathCommand, render::BresehamInterpolator, Color,
     Pixel, VertexSource, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
-#[cfg(feature = "no_std")]
-use devela::ops::FloatExt;
+#[allow(unused_imports)]
+use devela::ExtFloat;
 
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub(crate) struct Subpixel(i64);

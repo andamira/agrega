@@ -6,8 +6,8 @@ use crate::{
 };
 use alloc::{vec, vec::Vec};
 use core::ops::Mul;
-#[cfg(feature = "no_std")]
-use devela::ops::FloatExt;
+#[allow(unused_imports)]
+use devela::ExtFloat;
 
 /// Transformation
 #[derive(Debug, Default, Copy, Clone, PartialEq)]

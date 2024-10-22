@@ -1,7 +1,7 @@
 use crate::{clip::Rectangle, VertexSource};
 use alloc::{vec, vec::Vec};
-#[cfg(feature = "no_std")]
-use devela::ops::FloatExt;
+#[allow(unused_imports)]
+use devela::ExtFloat;
 
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub enum PathCommand {

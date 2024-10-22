@@ -13,8 +13,8 @@ use crate::{
     POLY_MR_SUBPIXEL_SHIFT, POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
-#[cfg(feature = "no_std")]
-use devela::ops::FloatExt;
+#[allow(unused_imports)]
+use devela::ExtFloat;
 
 pub(crate) const LINE_MAX_LENGTH: i64 = 1 << (POLY_SUBPIXEL_SHIFT + 10);
 
