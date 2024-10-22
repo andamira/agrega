@@ -5,7 +5,7 @@ use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::path::Path;
 
-///
+/// TODO
 pub struct PixfmtAlphaBlend<'a, T, C>
 where
     T: Pixel,

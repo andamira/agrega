@@ -40,12 +40,21 @@ pub(crate) mod scan;
 
 /* std || no_std + alloc */
 
+// private, few items
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
     feature = "nightly",
     doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
 )]
-pub mod alphamask;
+mod alphamask;
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg_attr(
+    feature = "nightly",
+    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
+)]
+mod pixfmt; // uses color
+
+// public
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
     feature = "nightly",
@@ -93,12 +102,6 @@ pub mod paths;
     feature = "nightly",
     doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
 )]
-pub mod pixfmt; // uses color
-#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
 pub mod raster;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
@@ -119,11 +122,15 @@ pub mod stroke;
 )]
 pub mod transform;
 
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+pub use {
+    alphamask::*, pixfmt::*,
+};
 #[doc(hidden)]
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 pub use {
-    alphamask::*, base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*,
-    pixfmt::*, raster::*, render::*, stroke::*, transform::*,
+    base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*,
+    raster::*, render::*, stroke::*, transform::*,
 };
 
 /* std */
@@ -315,7 +322,6 @@ pub trait Pixel {
     /// [`is_opaque`]: ../trait.Color.html#method.is_opaque
     /// [`is_transparent`]: ../trait.Color.html#method.is_transparent
     /// [`cover_mask`]: ../trait.Pixel.html#method.cover_mask
-    ///
     fn copy_or_blend_pix_with_cover<C: Color>(&mut self, id: (usize, usize), color: C, cover: u64) {
         if !color.is_transparent() {
             if color.is_opaque() && cover == Self::cover_mask() {
@@ -325,9 +331,7 @@ pub trait Pixel {
             }
         }
     }
-    /// Copy or Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`)
-    ///    with `cover`
-    ///
+    /// Copy or Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`) with `cover`.
     fn blend_hline<C: Color>(&mut self, x: i64, y: i64, len: i64, color: C, cover: u64) {
         if color.is_transparent() {
             return;
@@ -341,17 +345,14 @@ pub trait Pixel {
             }
         }
     }
-    /// Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`) with collection
-    ///   of `covers`
+    /// Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`) with collection of `covers`.
     fn blend_solid_hspan<C: Color>(&mut self, x: i64, y: i64, len: i64, color: C, covers: &[u64]) {
         assert_eq!(len as usize, covers.len());
         for (i, &cover) in covers.iter().enumerate() {
             self.blend_hline(x + i as i64, y, 1, color, cover);
         }
     }
-    /// Copy or Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`)
-    ///    with `cover`
-    ///
+    /// Copy or Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`) with `cover`.
     fn blend_vline<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, cover: u64) {
         if c.is_transparent() {
             return;
@@ -367,8 +368,7 @@ pub trait Pixel {
             }
         }
     }
-    /// Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`) with collection
-    ///   of `covers`
+    /// Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`) with collection of `covers`.
     fn blend_solid_vspan<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, covers: &[u64]) {
         assert_eq!(len as usize, covers.len());
         for (i, &cover) in covers.iter().enumerate() {
@@ -376,9 +376,9 @@ pub trait Pixel {
         }
     }
     /// Blend a collection of `colors` from (`x`,`y`) to (`x+len-1`,`y`) with
-    ///   either a collection of `covers` or a single `cover`
+    /// either a collection of `covers` or a single `cover`.
     ///
-    /// A collection of `covers` takes precedance over a single `cover`
+    /// A collection of `covers` takes precedence over a single `cover`.
     fn blend_color_hspan<C: Color>(
         &mut self,
         x: i64,
@@ -406,9 +406,9 @@ pub trait Pixel {
         }
     }
     /// Blend a collection of `colors` from (`x`,`y`) to (`x`,`y+len-1`) with
-    ///   either a collection of `covers` or a single `cover`
+    /// either a collection of `covers` or a single `cover`.
     ///
-    /// A collection of `covers` takes precedance over a single `cover`
+    /// A collection of `covers` takes precedence over a single `cover`.
     fn blend_color_vspan<C: Color>(
         &mut self,
         x: i64,
@@ -437,18 +437,20 @@ pub trait Pixel {
     }
 }
 
-pub(crate) trait LineInterp {
-    fn init(&mut self);
-    fn step_hor(&mut self);
-    fn step_ver(&mut self);
-}
+// TODO
+// pub(crate) trait LineInterp {
+//     fn init(&mut self);
+//     fn step_hor(&mut self);
+//     fn step_ver(&mut self);
+// }
 
 pub(crate) trait RenderOutline {
     fn cover(&self, d: i64) -> u64;
     fn blend_solid_hspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
     fn blend_solid_vspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
 }
-/// Functions for Drawing Outlines
+
+/// Functions for Drawing Outlines.
 //pub trait DrawOutline: Lines + AccurateJoins + SetColor {}
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(

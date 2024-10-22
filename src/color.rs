@@ -141,20 +141,29 @@ pub fn average(red: f64, green: f64, blue: f64) -> f64 {
     (red + green + blue) / 3.0
 }
 
+/// Color as Red, Green, Blue
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct Rgb8 {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
 impl Rgb8 {
+    #[inline]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red8(), c.green8(), c.blue8())
     }
-    pub fn white() -> Self {
+    pub const fn white() -> Self {
         Self::new(255, 255, 255)
     }
-    pub fn black() -> Self {
+    pub const fn black() -> Self {
         Self::new(0, 0, 0)
     }
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
+    pub const fn new(r: u8, g: u8, b: u8) -> Self {
         Rgb8 { r, g, b }
     }
-    pub fn gray(g: u8) -> Self {
+    pub const fn gray(g: u8) -> Self {
         Self::new(g, g, g)
     }
     pub fn from_slice(v: &[u8]) -> Self {
@@ -197,13 +206,6 @@ fn color_u8_to_f64(x: u8) -> f64 {
     f64::from(x) / 255.0
 }
 
-/// Color as Red, Green, Blue
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct Rgb8 {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-}
 /// Color as Red, Green, Blue, and Alpha with pre-multiplied components
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Rgba8pre {
@@ -214,7 +216,7 @@ pub struct Rgba8pre {
 }
 
 impl Rgba8pre {
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
     pub fn from_trait<C: Color>(color: C) -> Self {
@@ -270,7 +272,7 @@ impl Rgba32 {
         Self { r, g, b, a }
     }
     pub fn premultiply(&self) -> Self {
-        if (self.a - 1.0).abs() <= core::f32::EPSILON {
+        if (self.a - 1.0).abs() <= f32::EPSILON {
             Rgba32::new(self.r, self.g, self.b, self.a)
         } else if self.a == 0.0 {
             Rgba32::new(0., 0., 0., self.a)

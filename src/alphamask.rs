@@ -29,7 +29,7 @@ where
     /// Background color is from the rgb image and
     /// alpha form the gray scale
     ///
-    /// Calls blend_pix
+    /// Calls [`blend_pix`].
     //
     // From https://stackoverflow.com/a/746937 :
     // out = alpha * new + (1 - alpha) * old
@@ -56,7 +56,7 @@ where
         }
     }
 }
-/// Blend foreground and background pixels with an cover value
+/// Blends foreground and background pixels with a cover value.
 ///
 /// Color components are computed by:
 ///
@@ -65,8 +65,9 @@ where
 /// Computations are conducted using fixed point math
 ///
 /// see [Alpha Compositing](https://en.wikipedia.org/wiki/Alpha_compositing)
-
-fn blend_pix<C1: Color, C2: Color>(p: &C1, c: &C2, cover: u64) -> Rgba8 {
+#[inline]
+#[must_use]
+pub fn blend_pix<C1: Color, C2: Color>(p: &C1, c: &C2, cover: u64) -> Rgba8 {
     assert!(c.alpha() >= 0.0);
     assert!(c.alpha() <= 1.0);
 

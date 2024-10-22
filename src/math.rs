@@ -1,24 +1,33 @@
-/// Interpolate a value between two end points using fixed point math
+/// Interpolates a value between two end points using fixed point math.
 ///
 /// See agg_color_rgba.h:454 of agg version 2.4
-pub fn lerp_u8(p: u8, q: u8, a: u8) -> u8 {
+#[inline]
+#[must_use]
+pub const fn lerp_u8(p: u8, q: u8, a: u8) -> u8 {
     let base_shift = 8;
     let base_msb = 1 << (base_shift - 1);
     let v = if p > q { 1 } else { 0 };
-    let (q, p, a) = (i32::from(q), i32::from(p), i32::from(a));
+    let (q, p, a) = (q as i32, p as i32, a as i32);
     let t0: i32 = (q - p) * a + base_msb - v; // Signed multiplication
     let t1: i32 = ((t0 >> base_shift) + t0) >> base_shift;
     (p + t1) as u8
 }
 
-/// Interpolator a value between two end points pre-calculated by alpha
+/// Interpolates a value between two end points pre-calculated by alpha.
 ///
-/// p + q - (p*a)
-pub fn prelerp_u8(p: u8, q: u8, a: u8) -> u8 {
+/// Performs a pre-calculated linear interpolation between two end points
+/// `p` and `q`, using `a`lpha as a proportion.
+///
+/// The operation is `p + q - (p * a)`, with `p * a` calculated using fixed point
+/// math. If the sum of `p` and `q` exceeds 255 or the subtraction result is less
+/// than 0, they wrap around in accordance with the properties of `u8`.
+#[inline]
+#[must_use]
+pub const fn prelerp_u8(p: u8, q: u8, a: u8) -> u8 {
     p.wrapping_add(q).wrapping_sub(multiply_u8(p, a))
 }
 
-/// Multiply two u8 values using fixed point math
+/// Multiplies two u8 values using fixed point math.
 ///
 /// See agg_color_rgba.h:395
 ///
@@ -27,10 +36,12 @@ pub fn prelerp_u8(p: u8, q: u8, a: u8) -> u8 {
 /// - <http://x86asm.net/articles/fixed-point-arithmetic-and-tricks/>
 ///
 /// Still not sure where the value is added and shifted multiple times
-pub fn multiply_u8(a: u8, b: u8) -> u8 {
+#[inline]
+#[must_use]
+pub const fn multiply_u8(a: u8, b: u8) -> u8 {
     let base_shift = 8;
     let base_msb = 1 << (base_shift - 1);
-    let (a, b) = (u32::from(a), u32::from(b));
+    let (a, b) = (a as u32, b as u32);
     let t: u32 = a * b + base_msb;
     let tt: u32 = ((t >> base_shift) + t) >> base_shift;
     tt as u8
@@ -60,7 +71,7 @@ mod tests {
     //     let p = p as f64 / 255.0;
     //     let q = q as f64 / 255.0;
     //     let a = a as f64 / 255.0;
-    //     let v = p + q - a * p;
+    //     let v = p + q - (p * a);
     //     (v * 255.0).round() as u8
     // }
 
@@ -78,7 +89,7 @@ mod tests {
     }
 
     // #[test] // FIXME
-    // fn perlerp_u8_test() {
+    // fn prelerp_u8_test() {
     //     for p in 0..=255 {
     //         for q in 0..=255 {
     //             for a in 0..=255 {
