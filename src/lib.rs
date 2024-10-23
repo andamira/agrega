@@ -31,9 +31,6 @@ pub mod math;
 // private
 #[cfg(feature = "alloc")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
-pub(crate) mod buffer;
-#[cfg(feature = "alloc")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub(crate) mod cell;
 #[cfg(feature = "alloc")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
@@ -43,84 +40,45 @@ pub(crate) mod scan;
 
 // private, few items
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 mod alphamask;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
+mod base; // uses ::color
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 mod pixfmt; // uses color
 
 // public
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
-pub mod base; // uses ::color
-#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod clip;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod color;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod interp;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod outline;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod outline_aa;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod paths;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod raster;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod render;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod stroke;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
-)]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod transform;
 
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]

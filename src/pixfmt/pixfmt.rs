@@ -1,4 +1,5 @@
-use crate::{buffer::RenderingBuffer, color::*, math::*, Color, Pixel, Source};
+use super::buffer::RenderingBuffer;
+use crate::{color::*, math::*, Color, Pixel, Source};
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 #[cfg(feature = "std")]

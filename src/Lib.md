@@ -130,26 +130,22 @@ ren_base.to_file("tests/std/tmp/primitive.png").unwrap();
   [`copy_pixel`], [`copy_hline`], [`copy_vline`], [`fill`]
 
   Functions to blend colors with existing pixels through [`Pixfmt`] are
-  [`copy_or_blend_pix`], [`copy_or_blend_pix_with_cover`], [`blend_hline`],
-  [`blend_vline`], [`blend_solid_hspan`], [`blend_solid_vspan`],
-  [`blend_color_hspan`], [`blend_color_vspan`]
+  - `Pixel::`[`copy_or_blend_pix`][Pixel#method.copy_or_blend_pix]
+      ([`_with_cover`][Pixel#method.copy_or_blend_pix_with_cover])
+  - `Pixel::blend_`[[`hline`][Pixel#method.blend_hline]|
+      [`vline`][Pixel#method.blend_vline]]
+  - `Pixel::blend_solid_`[[`hspan`][Pixel#method.blend_solid_vspan]|
+      [`vspan`][Pixel#method.blend_solid_vspan]]
+  - `Pixel::blend_color_`[[`hspan`][Pixel#method.blend_color_vspan]|
+      [`vspan`][Pixel#method.blend_color_vspan]]
 
-
-[`Pixfmt`]: pixfmt/struct.Pixfmt.html
-[`clear`]: pixfmt/struct.Pixfmt.html#method.clear
-[`set`]: pixfmt/struct.Pixfmt.html#method.set
-[`copy_pixel`]: pixfmt/struct.Pixfmt.html#method.copy_pixel
-[`copy_hline`]: pixfmt/struct.Pixfmt.html#method.copy_hline
-[`copy_vline`]: pixfmt/struct.Pixfmt.html#method.copy_vline
-[`fill`]: pixfmt/trait.PixelDraw.html#method.fill
-[`copy_or_blend_pix`]: pixfmt/trait.PixelDraw.html#method.copy_or_blend_pix
-[`copy_or_blend_pix_with_cover`]: pixfmt/trait.PixelDraw.html#method.copy_or_blend_pix_with_cover
-[`blend_hline`]: pixfmt/trait.PixelDraw.html#method.blend_hline
-[`blend_vline`]: pixfmt/trait.PixelDraw.html#method.blend_vline
-[`blend_solid_hspan`]: pixfmt/trait.PixelDraw.html#method.blend_solid_hspan
-[`blend_solid_vspan`]: pixfmt/trait.PixelDraw.html#method.blend_solid_vspan
-[`blend_color_hspan`]: pixfmt/trait.PixelDraw.html#method.blend_color_hspan
-[`blend_color_vspan`]: pixfmt/trait.PixelDraw.html#method.blend_color_vspan
+[`Pixfmt`]: struct.Pixfmt.html
+[`clear`]: struct.Pixfmt.html#method.clear
+[`set`]: struct.Pixfmt.html#method.set
+[`copy_pixel`]: struct.Pixfmt.html#method.copy_pixel
+[`copy_hline`]: struct.Pixfmt.html#method.copy_hline
+[`copy_vline`]: struct.Pixfmt.html#method.copy_vline
+[`fill`]: trait.PixelDraw.html#method.fill
 [`render_scanlines`]: render/fn.render_scanlines.html
 [`render_all_paths`]: render/fn.render_all_paths.html
 [`render_scanlines_aa_solid`]: render/fn.render_scanlines_aa_solid.html
