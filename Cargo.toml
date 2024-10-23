@@ -23,25 +23,35 @@ keywords = ["2d", "graphics"]
 publish = true
 
 [features]
-# for now, almost everything depends on alloc
-default = ["alloc"]
 
+# environment
 std = ["alloc", "devela/std"]
 alloc = ["devela/alloc"]
 no_std = ["devela/libm"]
+
+# safety
 safe = []
 unsafe = []
-nightly = []
 
+# nightly
+nightly = [
+	"nightly_doc",
+] # enables all the following features:
+	# WAIT: [doc_cfg](https://github.com/rust-lang/rust/issues/43781)
+	# WAIT: [doc_notable_trait](https://github.com/rust-lang/rust/issues/45040)
+	nightly_doc = ["devela/nightly_doc"]
+
+# capabilities
+default = ["alloc"] # for now, almost everything depends on alloc
 text = ["std", "freetype-rs"]
-docsrs = ["nightly", "std", "freetype-rs"]
+
+_docsrs = ["nightly", "std", "freetype-rs"]
 
 
 [dependencies]
 devela = { version = "0.21.2", features = ["_float_f32", "_float_f64"] }
 
 freetype-rs = { version = "0.37", optional = true }
-# font-loader = "0.11.0"
 
 [dependencies.image]
 version = "0.25.4"
@@ -51,7 +61,7 @@ features = ["png", "gif", "pnm", "bmp", "jpeg"]
 
 [package.metadata.docs.rs]
 no-default-features = true
-features = ["docsrs"]
+features = ["_docsrs"]
 
 [[example]]
 name = "triangle"
