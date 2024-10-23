@@ -34,5 +34,5 @@ mod t16;
 mod t21_line_join;
 #[cfg(feature = "freetype-rs")]
 mod t22_inner_join;
-// #[cfg(feature = "freetype-rs")]
-// mod t23_font; // FIXME
+#[cfg(feature = "freetype-rs")]
+mod t23_font;

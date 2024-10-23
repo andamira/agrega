@@ -155,10 +155,10 @@ const fn value(v: &[u8]) -> i16 {
     i16::from_ne_bytes([v[0], v[1]])
 }
 
-pub struct GsvDefaultFont();
+pub struct GsvDefaultFont;
 
 impl GsvDefaultFont {
-    pub fn get() -> &'static [u8] {
+    pub const fn get() -> &'static [u8] {
         &GSV_DEFAULT_FONT_DATA
     }
 }
@@ -166,7 +166,7 @@ impl GsvDefaultFont {
 fn string_width(txt: &str, font: &ft::Face) -> f64 {
     let mut width = 0.0;
     for c in txt.chars() {
-        let glyph_index = font.get_char_index(c as usize);
+        let glyph_index = font.get_char_index(c as usize).unwrap();
         font.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
         let glyph = font.glyph();
         glyph.render_glyph(ft::RenderMode::Normal).unwrap();
@@ -195,7 +195,7 @@ where
     x -= dx;
     y += dy;
     for c in txt.chars() {
-        let glyph_index = font.get_char_index(c as usize);
+        let glyph_index = font.get_char_index(c as usize).unwrap();
         font.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
         font.glyph().render_glyph(ft::RenderMode::Normal).unwrap();
         let g = font.glyph().bitmap();
@@ -248,13 +248,15 @@ pub fn font(_name: &str) -> Result<ft::Face, AggFontError> {
     Err(AggFontError::Io("??".to_string()))
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+/// Horizontal text alignment.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum XAlign {
     Left,
     Center,
     Right,
 }
-#[derive(Debug, Copy, Clone, PartialEq)]
+/// Vertical text alignment.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum YAlign {
     Top,
     Center,
@@ -311,10 +313,7 @@ impl<'a> Label<'a> {
         self.color = color;
         self
     }
-    pub fn draw<T>(&mut self, ren: &mut RenderingBase<T>)
-    where
-        T: Pixel,
-    {
+    pub fn draw<T: Pixel>(&mut self, ren: &mut RenderingBase<T>) {
         draw_text_subpixel(&self.txt, self.x, self.y, self.xa, self.ya, self.color, self.font, ren);
     }
 }
@@ -350,7 +349,7 @@ fn draw_text_subpixel<T>(
     };
 
     for c in txt.chars() {
-        let glyph_index = font.get_char_index(c as usize);
+        let glyph_index = font.get_char_index(c as usize).unwrap();
         font.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
 
         let glyph = font.glyph().get_glyph().unwrap();
