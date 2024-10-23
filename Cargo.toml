@@ -15,25 +15,28 @@ license = "BSD-2-Clause"
 include = [
 	"/src/**/*.rs", "/src/**/*.md",
 	"/Cargo.toml",
-	"/LICENSE*",
-	"/README.md",
+	"/DOCS/*",
 ]
 categories = ["rendering::graphics-api", "no-std"]
 keywords = ["2d", "graphics"]
 publish = true
 
 [features]
+# ==============================================================================
 
 # environment
+# ------------------------------
 std = ["alloc", "devela/std"]
 alloc = ["devela/alloc"]
 no_std = ["devela/libm"]
 
 # safety
+# ------------------------------
 safe = []
 unsafe = []
 
 # nightly
+# ------------------------------
 nightly = [
 	"nightly_doc",
 ] # enables all the following features:
@@ -42,13 +45,16 @@ nightly = [
 	nightly_doc = ["devela/nightly_doc"]
 
 # capabilities
+# ------------------------------
 default = ["alloc"] # for now, almost everything depends on alloc
 text = ["std", "freetype-rs"]
 
+# The most complete versions of the documentation:
 _docsrs = ["nightly", "std", "freetype-rs"]
 
 
 [dependencies]
+# ==============================================================================
 devela = { version = "0.21.2", features = ["_float_f32", "_float_f64"] }
 
 freetype-rs = { version = "0.37", optional = true }
@@ -59,10 +65,15 @@ version = "0.25.4"
 default-features = false
 features = ["png", "gif", "pnm", "bmp", "jpeg"]
 
+
 [package.metadata.docs.rs]
+# ==============================================================================
 no-default-features = true
 features = ["_docsrs"]
 
+
+# examples
+# ==============================================================================
 [[example]]
 name = "triangle"
 required-features = ["std"]

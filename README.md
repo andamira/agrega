@@ -42,8 +42,7 @@ ren_base.to_file("tests/std/tmp/little_black_triangle.png").unwrap();
   - Anti-Aliased Drawing
   - Sub-pixel Accuracy
   - Rendering of Arbitrary Polygons
-  - Text/Font Rendering (through with [Freetype](https://www.freetype.org/))
-  - Performance ? (to be determined)
+  - Text/Font Rendering (with [Freetype](https://www.freetype.org/))
 
 
 ## Complexity
@@ -62,5 +61,5 @@ Quoting the original C++ library:
 The current version of this project was ported from `agg-2.4`
 from 2005 (BSD 3-Clause) and is released under the BSD 2-Clause License.
 
-See the [LICENSE](./LICENSE) file for the full license text and the list of authors.
-See the [LICENSE-2005](./LICENSE-2005) file for the license of the original project.
+See the [LICENSE](./DOCS/LICENSE) file for the full license text and the list of authors.
+See the [LICENSE-2005](./DOCS/LICENSE-2005) file for the license of the original project.
