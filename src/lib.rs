@@ -24,6 +24,7 @@ pub mod _gallery {
     #![doc = include_str!("./Gallery.md")]
 }
 
+mod clip;
 pub mod math;
 
 /* alloc */
@@ -50,9 +51,6 @@ mod base; // uses ::color
 mod pixfmt; // uses color
 
 // public
-#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
-pub mod clip;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod color;

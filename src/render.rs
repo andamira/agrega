@@ -2,7 +2,7 @@
 
 use crate::{
     base::RenderingBase,
-    clip::{Rectangle, BOTTOM, INSIDE, LEFT, RIGHT, TOP},
+    clip::{ClipSide, Rectangle},
     color::Rgba8,
     interp::{line_mr, LineParameters},
     outline::Subpixel,
@@ -596,11 +596,11 @@ pub(crate) fn clip_line_segment(
     let f1 = clip_box.clip_flags(x1, y1);
     let f2 = clip_box.clip_flags(x2, y2);
     let mut ret = 0;
-    if f1 == INSIDE && f2 == INSIDE {
+    if f1 == ClipSide::INSIDE && f2 == ClipSide::INSIDE {
         return (x1, y1, x2, y2, 0);
     }
-    let x_side = LEFT | RIGHT;
-    let y_side = TOP | BOTTOM;
+    let x_side = ClipSide::LEFT | ClipSide::RIGHT;
+    let y_side = ClipSide::TOP | ClipSide::BOTTOM;
     if f1 & x_side != 0 && f1 & x_side == f2 & x_side {
         return (x1, y1, x2, y2, 4); // Outside
     }
@@ -648,11 +648,11 @@ fn clip_move_point(
     flags: u8,
 ) -> Option<(i64, i64)> {
     let (mut x, mut y) = (x, y);
-    if flags & (LEFT | RIGHT) != 0 {
+    if flags & (ClipSide::LEFT | ClipSide::RIGHT) != 0 {
         if x1 == x2 {
             return None;
         } else {
-            let x = if flags & LEFT != 0 {
+            let x = if flags & ClipSide::LEFT != 0 {
                 clip_box.x1()
             } else {
                 clip_box.x2()
@@ -661,11 +661,11 @@ fn clip_move_point(
         }
     }
     let flags = clip_box.clip_flags(x, y);
-    if flags & (TOP | BOTTOM) != 0 {
+    if flags & (ClipSide::TOP | ClipSide::BOTTOM) != 0 {
         if y1 == y2 {
             return None;
         } else {
-            let y = if flags & BOTTOM != 0 {
+            let y = if flags & ClipSide::BOTTOM != 0 {
                 clip_box.y1()
             } else {
                 clip_box.y2()
