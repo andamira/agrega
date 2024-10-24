@@ -24,7 +24,6 @@ pub mod _gallery {
     #![doc = include_str!("./Gallery.md")]
 }
 
-mod clip;
 pub mod math;
 
 /* alloc */
@@ -33,6 +32,9 @@ pub mod math;
 #[cfg(feature = "alloc")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub(crate) mod cell;
+#[cfg(feature = "alloc")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
+mod clip;
 #[cfg(feature = "alloc")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub(crate) mod scan;
@@ -236,7 +238,7 @@ pub trait Pixel {
     /// If `color` [`is_transparent`] nothing is done
     ///
     /// ```
-    /// # #[cfg(feature = "std")]
+    /// # #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     /// # {
     /// use agrega::{Source, Pixfmt, Rgb8, Rgba8, Pixel};
     ///
