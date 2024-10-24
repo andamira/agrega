@@ -1,8 +1,13 @@
-# AGreGa
+# agrega
 
 [![Crate](https://img.shields.io/crates/v/agrega.svg)](https://crates.io/crates/agrega)
 [![API](https://docs.rs/agrega/badge.svg)](https://docs.rs/agrega/)
 [![MSRV: 1.82.0](https://flat.badgen.net/badge/MSRV/1.82.0/purple)](https://releases.rs/docs/1.82.0/)
+<br/>
+[![Code](https://tokei.rs/b1/github/andamira/agrega?category=code)](https://github.com/andamira/agrega)
+[![Documentation](https://tokei.rs/b1/github/andamira/agrega?category=comments)](https://docs.rs/agrega/)
+[![Files](https://tokei.rs/b1/github/andamira/agrega?category=files)](https://github.com/andamira/agrega/tree/main/)
+---
 
 A Rust port of [Anti-Grain Geometry](https://agg.sourceforge.net/antigrain.com/).
 
