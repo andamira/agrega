@@ -197,8 +197,7 @@ where
         let v3 = self.vertices[2];
         let v4 = self.vertices[3];
 
-        let mut dv = DrawVars::new();
-        dv.idx = 3;
+        let mut dv = DrawVars { idx: 3, ..Default::default() };
         let lprev = len_i64(&v1, &v2);
         dv.lcurr = len_i64(&v2, &v3);
         dv.lnext = len_i64(&v3, &v4);

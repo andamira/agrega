@@ -306,7 +306,7 @@ where
     ///
     /// Return the Miter Join for 3 points
     ///
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     fn calc_miter(
         &self,
         p0: &Vertex<f64>,
@@ -439,7 +439,7 @@ where
     ///     t = ----------------------------------
     ///          (bx-ax)(dy-cy) - (by-ay)(dx-cx)
     ///```
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     fn calc_intersection(
         &self,
         ax: f64,

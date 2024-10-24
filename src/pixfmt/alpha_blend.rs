@@ -1,6 +1,6 @@
 use super::Pixfmt;
 use crate::base::RenderingBase;
-use crate::{color::*, math::*, Color, Pixel};
+use crate::{color::*, util::*, Color, Pixel};
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
 use std::path::Path;

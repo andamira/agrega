@@ -1,8 +1,10 @@
 //! Colors
 
-use crate::{math::multiply_u8, Color};
+use crate::util::multiply_u8;
 #[allow(unused_imports)]
 use devela::ExtFloat;
+
+/* private */
 
 /// Convert an f64 [0,1] component to a u8 [0,255] component
 fn cu8(v: f64) -> u8 {
@@ -24,6 +26,38 @@ fn rgb_to_srgb(x: f64) -> f64 {
     } else {
         1.055 * x.powf(1.0 / 2.4) - 0.055
     }
+}
+
+/* public */
+
+/// Access Color properties and compoents
+pub trait Color: core::fmt::Debug + Copy {
+    /// Get red value [0..=1] as f64
+    fn red(&self) -> f64;
+    /// Get green value [0..=1] as f64
+    fn green(&self) -> f64;
+    /// Get blue value [0..=1] as f64
+    fn blue(&self) -> f64;
+    /// Get alpha value [0..=1] as f64
+    fn alpha(&self) -> f64;
+    /// Get red value [0..=255] as u8
+    fn red8(&self) -> u8;
+    /// Get green value [0..=255] as u8
+    fn green8(&self) -> u8;
+    /// Get blue value [0..=255] as u8
+    fn blue8(&self) -> u8;
+    /// Get alpha value [0..=255] as u8
+    fn alpha8(&self) -> u8;
+    /// Return if the color is completely transparent, alpha = 0.0
+    fn is_transparent(&self) -> bool {
+        self.alpha() == 0.0
+    }
+    /// Return if the color is completely opaque, alpha = 1.0
+    fn is_opaque(&self) -> bool {
+        self.alpha() >= 1.0
+    }
+    /// Return if the color has been premultiplied
+    fn is_premultiplied(&self) -> bool;
 }
 
 /// Color as Red, Green, Blue, and Alpha

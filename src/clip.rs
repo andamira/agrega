@@ -157,7 +157,7 @@ impl Clip {
     }
 
     /// Clip a line along the top and bottom of the region
-    #[allow(clippy::too_many_arguments)]
+    #[expect(clippy::too_many_arguments)]
     fn line_clip_y(
         &self,
         ras: &mut RasterizerCell,

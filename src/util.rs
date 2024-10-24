@@ -1,3 +1,13 @@
+// agrega::util
+
+#![allow(dead_code)]
+
+pub(crate) const POLY_SUBPIXEL_SHIFT: i64 = 8;
+pub(crate) const POLY_SUBPIXEL_SCALE: i64 = 1 << POLY_SUBPIXEL_SHIFT;
+pub(crate) const POLY_SUBPIXEL_MASK: i64 = POLY_SUBPIXEL_SCALE - 1;
+pub(crate) const POLY_MR_SUBPIXEL_SHIFT: i64 = 4;
+pub(crate) const MAX_HALF_WIDTH: usize = 64;
+
 /// Interpolates a value between two end points using fixed point math.
 ///
 /// See agg_color_rgba.h:454 of agg version 2.4

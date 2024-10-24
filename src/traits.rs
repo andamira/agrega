@@ -1,5 +1,8 @@
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 use crate::{LineParameters, RenderData, Rgba8, Vertex};
+// #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg(any(feature = "std", feature = "no_std"))]
+use crate::Color;
 
 /// Source of vertex points
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
@@ -16,35 +19,6 @@ pub trait VertexSource {
     fn xconvert(&self) -> alloc::vec::Vec<Vertex<f64>>;
 }
 
-/// Access Color properties and compoents
-pub trait Color: core::fmt::Debug + Copy {
-    /// Get red value [0..=1] as f64
-    fn red(&self) -> f64;
-    /// Get green value [0..=1] as f64
-    fn green(&self) -> f64;
-    /// Get blue value [0..=1] as f64
-    fn blue(&self) -> f64;
-    /// Get alpha value [0..=1] as f64
-    fn alpha(&self) -> f64;
-    /// Get red value [0..=255] as u8
-    fn red8(&self) -> u8;
-    /// Get green value [0..=255] as u8
-    fn green8(&self) -> u8;
-    /// Get blue value [0..=255] as u8
-    fn blue8(&self) -> u8;
-    /// Get alpha value [0..=255] as u8
-    fn alpha8(&self) -> u8;
-    /// Return if the color is completely transparent, alpha = 0.0
-    fn is_transparent(&self) -> bool {
-        self.alpha() == 0.0
-    }
-    /// Return if the color is completely opaque, alpha = 1.0
-    fn is_opaque(&self) -> bool {
-        self.alpha() >= 1.0
-    }
-    /// Return if the color has been premultiplied
-    fn is_premultiplied(&self) -> bool;
-}
 /// Render scanlines to Image
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
@@ -90,6 +64,7 @@ pub trait Source {
 }
 
 /// Drawing and pixel related routines
+#[cfg(any(feature = "std", feature = "no_std"))]
 pub trait Pixel {
     fn cover_mask() -> u64;
     fn bpp() -> usize;
@@ -311,12 +286,4 @@ pub trait DrawOutline {
     where
         F: Fn(i64) -> bool;
     fn pie(&mut self, xc: i64, y: i64, x1: i64, y1: i64, x2: i64, y2: i64);
-}
-
-pub(crate) trait DistanceInterpolator {
-    fn dist(&self) -> i64;
-    fn inc_x(&mut self, dy: i64);
-    fn inc_y(&mut self, dx: i64);
-    fn dec_x(&mut self, dy: i64);
-    fn dec_y(&mut self, dx: i64);
 }

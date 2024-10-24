@@ -18,7 +18,7 @@ where
     pub fn new(pixf: T) -> RenderingBase<T> {
         RenderingBase { pixf }
     }
-    ///
+    /// Returns the rendering base as a byte slice.
     pub fn as_bytes(&self) -> &[u8] {
         self.pixf.as_bytes()
     }
@@ -99,7 +99,7 @@ where
         self.pixf.blend_solid_vspan(x, y, len, c, covers_win);
     }
 
-    ///
+    /// TODO
     pub fn blend_color_vspan<C: Color>(
         &mut self,
         x: i64,
@@ -136,7 +136,7 @@ where
         let colors_win = &colors[off as usize..(off + len) as usize];
         self.pixf.blend_color_vspan(x, y, len, colors_win, covers_win, cover);
     }
-    ///
+    /// TODO
     pub fn blend_color_hspan<C: Color>(
         &mut self,
         x: i64,
@@ -174,7 +174,7 @@ where
         self.pixf.blend_color_hspan(x, y, len, colors_win, covers_win, cover);
     }
 
-    ///
+    /// TODO
     pub fn blend_from<S: Pixel + Source>(&mut self, other: &S, opacity: f64) {
         if self.pixf.width() != other.width() || self.pixf.height() != other.height() {
             panic!("wrong size");

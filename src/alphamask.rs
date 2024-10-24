@@ -2,7 +2,7 @@
 
 use crate::{
     color::{Gray8, Rgb8, Rgba8},
-    math::{lerp_u8, multiply_u8},
+    util::{lerp_u8, multiply_u8},
     pixfmt::Pixfmt,
     Color, Pixel, Source,
 };
