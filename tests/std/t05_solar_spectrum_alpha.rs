@@ -1,5 +1,4 @@
 #[test]
-#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 fn t05_solar_spectrum_alpha() {
     use agrega::Pixel;
 

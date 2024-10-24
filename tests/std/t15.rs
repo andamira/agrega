@@ -1,5 +1,4 @@
 #[test]
-#[cfg(feature = "std")]
 fn t15_path_stroke() {
     use agrega::Render;
 

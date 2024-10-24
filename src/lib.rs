@@ -17,7 +17,7 @@ compile_error!("You can't enable the `std` and `no_std` features at the same tim
 compile_error!("You can't enable `safe` and `unsafe*` features at the same time.");
 
 #[doc(hidden)]
-#[cfg(all(feature = "std", feature = "freetype-rs"))]
+#[cfg(feature = "freetype-rs")]
 pub use freetype as ft;
 
 pub mod _gallery {
@@ -77,6 +77,9 @@ pub mod render;
 pub mod stroke;
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
+pub mod text;
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 pub mod transform;
 
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
@@ -85,7 +88,7 @@ pub use {alphamask::*, pixfmt::*};
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 pub use {
     base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*, raster::*,
-    render::*, stroke::*, transform::*,
+    render::*, stroke::*, text::*, transform::*,
 };
 
 /* std */
@@ -93,18 +96,6 @@ pub use {
 #[cfg(feature = "std")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
 pub mod ppm;
-
-/* std & freetype-rs */
-
-#[cfg(all(feature = "std", feature = "freetype-rs"))]
-#[cfg_attr(
-    feature = "nightly",
-    doc(cfg(all(feature = "std", feature = "freetype-rs")))
-)]
-pub mod text;
-#[doc(hidden)]
-#[cfg(all(feature = "std", feature = "freetype-rs"))]
-pub use text::*;
 
 #[cfg(feature = "alloc")]
 const POLY_SUBPIXEL_SHIFT: i64 = 8;
@@ -444,15 +435,11 @@ pub mod all {
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     pub use super::{
         alphamask::*, base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*,
-        pixfmt::*, raster::*, render::*, stroke::*, transform::*, DrawOutline, Render, Source,
-        VertexSource,
+        pixfmt::*, raster::*, render::*, stroke::*, text::*, transform::*, DrawOutline, Render,
+        Source, VertexSource,
     };
 
     #[doc(inline)]
     #[cfg(feature = "std")]
     pub use super::ppm::*;
-
-    #[doc(inline)]
-    #[cfg(all(feature = "std", feature = "freetype-rs"))]
-    pub use super::text::*;
 }

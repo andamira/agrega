@@ -1,5 +1,4 @@
 #[test]
-#[cfg(feature = "std")]
 fn t11_full() {
     use agrega::Render;
 

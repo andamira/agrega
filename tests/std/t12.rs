@@ -1,5 +1,4 @@
 #[test]
-#[cfg(feature = "std")]
 fn t12_clip_box() {
     use agrega::Render;
 
