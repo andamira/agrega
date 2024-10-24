@@ -30,9 +30,9 @@ mod t15;
 mod t16;
 
 // Tests depending on freetype
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 mod t21_line_join;
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 mod t22_inner_join;
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 mod t23_font;

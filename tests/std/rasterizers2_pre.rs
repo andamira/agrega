@@ -1,4 +1,4 @@
-#![cfg_attr(not(feature = "freetype-rs"), allow(unused))]
+#![cfg_attr(not(feature = "freetype"), allow(unused))]
 
 use agrega::{DrawOutline, Pixel, Render, VertexSource};
 
@@ -119,7 +119,7 @@ fn chain() -> agrega::Pixfmt<agrega::Rgba32> {
 }
 
 #[test]
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 fn rasterizers2_pre() {
     let (w, h) = (500, 450);
 
@@ -253,7 +253,7 @@ fn rasterizers2_pre() {
     .unwrap());
 }
 
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 fn text<T>(
     ras: &mut agrega::RasterizerScanline,
     ren: &mut agrega::RenderingScanlineAASolid<T>,

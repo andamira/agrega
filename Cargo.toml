@@ -47,11 +47,12 @@ nightly = [
 # capabilities
 # ------------------------------
 default = ["alloc"] # for now, almost everything depends on alloc
-text = ["std", "freetype-rs"]
+text = ["std", "freetype"]
 
 # The most complete versions of the documentation:
-_docsrs = ["nightly", "std", "freetype-rs"]
+_docsrs = ["nightly", "std", "freetype"]
 
+freetype = ["dep:freetype-rs", "alloc"]
 
 [dependencies]
 # ==============================================================================
@@ -61,9 +62,8 @@ freetype-rs = { version = "0.37", optional = true }
 
 [dependencies.image]
 version = "0.25.4"
-# optional = true # TODO
 default-features = false
-features = ["png", "gif", "pnm", "bmp", "jpeg"]
+features = ["png", "pnm", "bmp", "jpeg"]
 
 
 [package.metadata.docs.rs]

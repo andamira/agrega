@@ -17,7 +17,7 @@ compile_error!("You can't enable the `std` and `no_std` features at the same tim
 compile_error!("You can't enable `safe` and `unsafe*` features at the same time.");
 
 #[doc(hidden)]
-#[cfg(feature = "freetype-rs")]
+#[cfg(feature = "freetype")]
 pub use freetype as ft;
 
 pub mod _gallery {
