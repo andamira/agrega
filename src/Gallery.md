@@ -1,5 +1,3 @@
-Gallery of images
-
 - [Direct Pixel Access](#direct-pixel-access)
 - [Copy a set of colors horizontally](#copy-a-set-of-colors-horizontally)
 - [Copy with an Alpha Channel](#copy-with-an-alpha-channel)

@@ -373,8 +373,8 @@ fn fill_color_array(array: &mut [agrega::Rgb8], begin: agrega::Rgb8, end: agrega
     let n = (array.len() - 1) as f64;
     for (i, v) in array.iter_mut().enumerate() {
         let a = ((i as f64 / n) * 255.0).round() as u8;
-        v.r = agrega::math::lerp_u8(begin.r, end.r, a);
-        v.g = agrega::math::lerp_u8(begin.g, end.g, a);
-        v.b = agrega::math::lerp_u8(begin.b, end.b, a);
+        v.r = agrega::lerp_u8(begin.r, end.r, a);
+        v.g = agrega::lerp_u8(begin.g, end.g, a);
+        v.b = agrega::lerp_u8(begin.b, end.b, a);
     }
 }

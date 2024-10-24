@@ -1,19 +1,19 @@
 // agrega::font::label
 
-use crate::{ft, Pixel, RenderingBase, Rgba8};
+use crate::{_dep::freetype, Pixel, RenderingBase, Rgba8};
 use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
 
 /// Returns the string width using the given `font_face`.
-pub fn string_width(txt: &str, font_face: &ft::Face) -> f64 {
+pub fn string_width(txt: &str, font_face: &freetype::Face) -> f64 {
     let mut width = 0.0;
     for c in txt.chars() {
         let glyph_index = font_face.get_char_index(c as usize).unwrap();
-        font_face.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
+        font_face.load_glyph(glyph_index, freetype::face::LoadFlag::DEFAULT).unwrap();
         let glyph = font_face.glyph();
-        glyph.render_glyph(ft::RenderMode::Normal).unwrap();
+        glyph.render_glyph(freetype::RenderMode::Normal).unwrap();
         let adv = glyph.advance();
         width += adv.x as f64
     }
@@ -21,7 +21,7 @@ pub fn string_width(txt: &str, font_face: &ft::Face) -> f64 {
 }
 
 /// Returns the line height of the given `font_face`.
-pub fn line_height(font_face: &ft::Face) -> f64 {
+pub fn line_height(font_face: &freetype::Face) -> f64 {
     let met = font_face.size_metrics().unwrap();
     (met.ascender - met.descender) as f64 / 64.0
 }
@@ -49,7 +49,7 @@ pub struct Label<'a> {
     xa: XAlign,
     ya: YAlign,
     color: Rgba8,
-    font: &'a ft::Face,
+    font: &'a freetype::Face,
     #[allow(dead_code)]
     size: f64,
 }
@@ -62,7 +62,7 @@ impl<'a> Label<'a> {
         x: f64,
         y: f64,
         size: f64,
-        font: &'a ft::Face,
+        font: &'a freetype::Face,
     ) -> Result<Self, AggFontError> {
         let resolution = 72;
         font.set_char_size((size * 64.0) as isize, 0, resolution, 0)?;
@@ -133,7 +133,7 @@ pub fn draw_text<T: Pixel>(
     x: i64,
     y: i64,
     color: Rgba8,
-    font: &ft::Face,
+    font: &freetype::Face,
     ren_base: &mut RenderingBase<T>,
 ) {
     let (mut x, mut y) = (x, y);
@@ -146,8 +146,8 @@ pub fn draw_text<T: Pixel>(
     y += dy;
     for c in txt.chars() {
         let glyph_index = font.get_char_index(c as usize).unwrap();
-        font.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
-        font.glyph().render_glyph(ft::RenderMode::Normal).unwrap();
+        font.load_glyph(glyph_index, freetype::face::LoadFlag::DEFAULT).unwrap();
+        font.glyph().render_glyph(freetype::RenderMode::Normal).unwrap();
         let g = font.glyph().bitmap();
         let left = font.glyph().bitmap_left() as i64;
         let top = font.glyph().bitmap_top() as i64;
@@ -181,7 +181,7 @@ pub fn draw_text_subpixel<T: Pixel>(
     xalign: XAlign,
     yalign: YAlign,
     color: Rgba8,
-    font: &ft::Face,
+    font: &freetype::Face,
     ren_base: &mut RenderingBase<T>,
 ) {
     let (mut x, mut y) = (x, y);
@@ -201,15 +201,15 @@ pub fn draw_text_subpixel<T: Pixel>(
 
     for c in txt.chars() {
         let glyph_index = font.get_char_index(c as usize).unwrap();
-        font.load_glyph(glyph_index, ft::face::LoadFlag::DEFAULT).unwrap();
+        font.load_glyph(glyph_index, freetype::face::LoadFlag::DEFAULT).unwrap();
 
         let glyph = font.glyph().get_glyph().unwrap();
-        let dt = ft::Vector {
+        let dt = freetype::Vector {
             x: ((x - x.floor()) * 64.0).round() as i64,
             y: ((y - y.floor()) * 64.0).round() as i64,
         };
         glyph.transform(None, Some(dt)).unwrap();
-        let g = glyph.to_bitmap(ft::RenderMode::Normal, None).unwrap();
+        let g = glyph.to_bitmap(freetype::RenderMode::Normal, None).unwrap();
         let left = g.left() as i64;
         let top = g.top() as i64;
         let bit = g.bitmap();
@@ -236,11 +236,11 @@ pub fn draw_text_subpixel<T: Pixel>(
 #[derive(Debug)]
 pub enum AggFontError {
     /// Freetype Error
-    Ft(ft::error::Error),
+    Ft(freetype::error::Error),
     Io(String),
 }
-impl From<ft::error::Error> for AggFontError {
-    fn from(err: ft::error::Error) -> Self {
+impl From<freetype::error::Error> for AggFontError {
+    fn from(err: freetype::error::Error) -> Self {
         AggFontError::Ft(err)
     }
 }
@@ -251,10 +251,10 @@ impl From<String> for AggFontError {
 }
 
 // FIXME
-// pub fn font(_name: &str) -> Result<ft::Face, AggFontError> {
+// pub fn font(_name: &str) -> Result<freetype::Face, AggFontError> {
 //     //let prop = font_loader::system_fonts::FontPropertyBuilder::new().family(name).build();
 //     //let (font, _) = font_loader::system_fonts::get(&prop).ok_or("error loading font".to_string())?;
-//     //let lib = ft::Library::init()?;
+//     //let lib = freetype::Library::init()?;
 //     //let face = lib.new_memory_face(font, 0)?;
 //     //Ok(face)
 //     Err(AggFontError::Io("??".to_string()))

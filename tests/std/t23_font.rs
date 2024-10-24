@@ -1,4 +1,4 @@
-use agrega::{ft::Library, Label, Pixfmt, RenderingBase, Rgb8, Rgba8, XAlign, YAlign};
+use agrega::{_dep::freetype::Library, Label, Pixfmt, RenderingBase, Rgb8, Rgba8, XAlign, YAlign};
 
 #[test]
 fn t23_font() {
