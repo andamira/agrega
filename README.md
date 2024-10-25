@@ -62,9 +62,12 @@ Quoting the original C++ library:
   minimum of implicit or explicit dependencies.
 
 ## License
+This project is licensed under the **BSD 2-Clause License**. Additionally,
+modifications made in this Rust port are available under your choice of
+**Apache License, Version 2.0** or the **MIT License**.
 
-The current version of this project was ported from `agg-2.4`
-from 2005 (BSD 3-Clause) and is released under the BSD 2-Clause License.
-
-See the [LICENSE](./DOCS/LICENSE) file for the full license text and the list of authors.
-See the [LICENSE-2005](./DOCS/LICENSE-2005) file for the license of the original project.
+### License Note
+This Rust project is based on the `agg-2.4` (2005) C++ library, which was originally
+licensed under a dual-license model. The prior Rust port of `agg-2.4` selected
+the BSD 2-Clause License as its sole license, which has been retained here,
+alongside the Apache-2.0 and MIT licenses which apply to the new code.

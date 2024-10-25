@@ -11,11 +11,13 @@ authors = [
 	"José Luis Cruz <joseluis@andamira.net>",
 ]
 repository = "https://github.com/andamira/agrega"
-license = "BSD-2-Clause"
+# BSD-2-Clause: Required for the original and any base code.
+# Apache-2.0 or MIT: Apply only to the new modifications.
+license = "BSD-2-Clause OR Apache-2.0 OR MIT"
 include = [
 	"/src/**/*.rs", "/src/**/*.md",
 	"/Cargo.toml",
-	"/DOCS/*",
+	"/LICENSE*",
 ]
 categories = ["rendering::graphics-api", "no-std"]
 keywords = ["2d", "graphics"]
