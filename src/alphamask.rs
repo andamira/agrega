@@ -2,8 +2,8 @@
 
 use crate::{
     color::{Gray8, Rgb8, Rgba8},
-    util::{lerp_u8, multiply_u8},
     pixfmt::Pixfmt,
+    util::{lerp_u8, multiply_u8},
     Color, Pixel, Source,
 };
 

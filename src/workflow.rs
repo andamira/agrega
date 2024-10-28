@@ -1,4 +1,3 @@
-
 // How does this work / Data Flow
 //    ren = RenAA( RenBase( Pixfmt( data ) ) )
 //    ras = Raster()
@@ -28,4 +27,3 @@
 //   - Check Input Path (ADD_PATH) in rasterizer
 //   - Check Scanlines (SWEEP SCANLINES) in rasterizer
 //   - Check Pixels    (BLEND_HLINE)
-

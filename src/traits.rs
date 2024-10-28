@@ -14,7 +14,7 @@ pub trait VertexSource {
     /// Rewind the vertex source (unused)
     fn rewind(&self) {}
 
-    /// Get values from the source
+    /// Get the cloned values from the source.
     ///
     /// This could be turned into an iterator
     fn xconvert(&self) -> alloc::vec::Vec<Vertex<f64>>;

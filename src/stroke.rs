@@ -88,10 +88,7 @@ pub struct Stroke<T: VertexSource> {
     inner_join: InnerJoin,
 }
 
-impl<T> VertexSource for Stroke<T>
-where
-    T: VertexSource,
-{
+impl<T: VertexSource> VertexSource for Stroke<T> {
     fn xconvert(&self) -> Vec<Vertex<f64>> {
         self.stroke()
     }
@@ -702,19 +699,13 @@ pub struct Dash<S: VertexSource> {
     closed: bool,
 }
 
-impl<S> VertexSource for Dash<S>
-where
-    S: VertexSource,
-{
+impl<S: VertexSource> VertexSource for Dash<S> {
     fn xconvert(&self) -> Vec<Vertex<f64>> {
         self.draw()
     }
 }
 
-impl<S> Dash<S>
-where
-    S: VertexSource,
-{
+impl<S: VertexSource> Dash<S> {
     pub fn new(source: S) -> Self {
         Self {
             dashes: vec![],

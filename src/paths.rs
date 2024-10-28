@@ -88,15 +88,12 @@ pub const fn cross(p1: &Vertex<f64>, p2: &Vertex<f64>, p: &Vertex<f64>) -> f64 {
 ///
 /// The `Path` struct contains a list of vertices that together form shapes or
 /// paths, where each vertex defines a position and a drawing command.
-//
-//  typedef path_base<vertex_block_storage<double> > path_storage;
 #[derive(Debug, Default)]
 pub struct Path {
     pub vertices: Vec<Vertex<f64>>,
 }
 
 impl VertexSource for Path {
-    /// Converts the path vertices into a vector of `Vertex<f64>` for processing.
     fn xconvert(&self) -> Vec<Vertex<f64>> {
         self.vertices.clone()
     }
