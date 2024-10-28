@@ -17,6 +17,7 @@ pub trait VertexSource {
     /// Get the cloned values from the source.
     ///
     /// This could be turned into an iterator
+    #[must_use]
     fn xconvert(&self) -> alloc::vec::Vec<Vertex<f64>>;
 }
 

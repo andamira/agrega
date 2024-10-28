@@ -24,7 +24,7 @@
 //! ```
 
 use crate::{
-    paths::{cross, len, split, PathCommand, Vertex},
+    paths::{PathCommand, Vertex},
     VertexSource,
 };
 use alloc::{vec, vec::Vec};
@@ -346,7 +346,7 @@ where
             xi = xit;
             yi = yit;
             let pz = Vertex::line_to(xi, yi); // Intersection point
-            di = len(p1, &pz); // Distance from p1 to p
+            di = Vertex::len(p1, &pz); // Distance from p1 to p
             if di <= lim {
                 // Inside the miter limit - Simplest case
                 out.push(Vertex::line_to(xi, yi));
@@ -365,7 +365,7 @@ where
             let x2 = p1.x + dx1;
             let y2 = p1.y - dy1;
             let pz = Vertex::line_to(x2, y2);
-            if (cross(p0, p1, &pz) < 0.0) == (cross(p1, p2, &pz) < 0.0) {
+            if (Vertex::cross(p0, p1, &pz) < 0.0) == (Vertex::cross(p1, p2, &pz) < 0.0) {
                 // This case means that the next segment continues
                 // the previous one (straight line)
                 //-----------------
@@ -469,8 +469,8 @@ where
     ///
     fn calc_join(&self, p0: &Vertex<f64>, p1: &Vertex<f64>, p2: &Vertex<f64>) -> Vec<Vertex<f64>> {
         let mut out = vec![];
-        let len1 = len(p1, p0);
-        let len2 = len(p2, p1);
+        let len1 = Vertex::len(p1, p0);
+        let len2 = Vertex::len(p2, p1);
 
         if len1 == 0.0 {
             panic!("Same point between p0,p1 {:?} {:?}", p0, p1);
@@ -484,7 +484,7 @@ where
         let dx2 = self.width * (p2.y - p1.y) / len2;
         let dy2 = self.width * (p2.x - p1.x) / len2;
         // Cross Product of the three points
-        let cp = cross(p0, p1, p2);
+        let cp = Vertex::cross(p0, p1, p2);
 
         if cp != 0.0 && cp.is_sign_positive() == self.width.is_sign_positive() {
             // Inner Join
@@ -626,7 +626,7 @@ where
         // Get verticies from Vertex Source
         let v0 = &self.source.xconvert();
         // Split and loop along unique paths, ended by MoveTo's
-        let pairs = split(v0);
+        let pairs = Vertex::split(v0);
         for (m1, m2) in pairs {
             let mut outf = vec![];
             // Clean the current path, return new path
@@ -772,7 +772,7 @@ impl<S: VertexSource> Dash<S> {
         let (mut x, mut y) = (v1.x, v1.y);
         out.push(Vertex::move_to(x, y));
         // Length of the Current Segment
-        let mut curr_rest = len(&v1, &v2);
+        let mut curr_rest = Vertex::len(&v1, &v2);
         let (mut curr_dash_start, mut curr_dash) = if self.dash_start >= 0.0 {
             self.calc_dash_start(self.dash_start)
         } else {
@@ -793,8 +793,8 @@ impl<S: VertexSource> Dash<S> {
                     curr_dash = 0;
                 }
                 curr_dash_start = 0.0;
-                x = v2.x - (v2.x - v1.x) * curr_rest / len(&v1, &v2);
-                y = v2.y - (v2.y - v1.y) * curr_rest / len(&v1, &v2);
+                x = v2.x - (v2.x - v1.x) * curr_rest / Vertex::len(&v1, &v2);
+                y = v2.y - (v2.y - v1.y) * curr_rest / Vertex::len(&v1, &v2);
             } else {
                 // Dash is longer than line segment
                 curr_dash_start += curr_rest;
@@ -816,7 +816,7 @@ impl<S: VertexSource> Dash<S> {
                 } else {
                     v2 = src[i];
                 }
-                curr_rest = len(&v1, &v2);
+                curr_rest = Vertex::len(&v1, &v2);
             }
             out.push(cmd(x, y));
         }
@@ -851,7 +851,7 @@ fn clean_path(v: &[Vertex<f64>]) -> Vec<Vertex<f64>> {
     for i in 1..v.len() {
         match v[i].cmd {
             PathCommand::LineTo => {
-                if len(&v[i - 1], &v[i]) >= 1e-6 {
+                if Vertex::len(&v[i - 1], &v[i]) >= 1e-6 {
                     mark.push(i);
                 }
             }
@@ -878,7 +878,7 @@ fn clean_path(v: &[Vertex<f64>]) -> Vec<Vertex<f64>> {
         };
         let last = out[i];
         // If last point and first are **NOT** the same, done
-        if len(&first, &last) >= 1e-6 {
+        if Vertex::len(&first, &last) >= 1e-6 {
             break;
         }
         // If **SAME** point, remove last Vertex and continue
