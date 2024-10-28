@@ -111,33 +111,45 @@ pub struct Rgba8 {
 impl Rgba8 {
     /// Creates a new `Rgba8` color from red, green, blue, and alpha components.
     #[inline]
+    #[must_use]
     pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Rgba8 { r, g, b, a }
     }
     /// Constructs `Rgba8` from any type implementing `Color` trait.
     #[inline]
+    #[must_use]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red8(), c.green8(), c.blue8(), c.alpha8())
     }
     /// Creates a color from a wavelength and gamma correction factor.
     #[inline]
+    #[must_use]
     pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
         let c = Rgb8::from_wavelength_gamma(w, gamma);
         Self::from_trait(c) // IMPROVE
     }
 
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
+    #[inline]
+    pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+
     /// Returns pure white (`255, 255, 255, 255`).
     #[inline]
+    #[must_use]
     pub const fn white() -> Self {
         Self::new(255, 255, 255, 255)
     }
     /// Returns pure black (`0, 0, 0, 255`).
     #[inline]
+    #[must_use]
     pub const fn black() -> Self {
         Self::new(0, 0, 0, 255)
     }
 
     /// Returns the color premultiplied by its alpha.
+    #[must_use]
     pub const fn premultiply(self) -> Rgba8pre {
         match self.a {
             255 => Rgba8pre::new(self.r, self.g, self.b, self.a),
@@ -162,6 +174,7 @@ impl Rgba8 {
 
     /// Returns the color components as an array `[r, g, b, a]`.
     #[inline]
+    #[must_use]
     pub const fn into_array(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
@@ -179,12 +192,14 @@ pub struct Gray8 {
 impl Gray8 {
     /// Creates a new opaque grayscale color.
     #[inline]
+    #[must_use]
     pub const fn new(value: u8) -> Self {
         Self { value, alpha: 255 }
     }
 
     /// Converts a `Color` trait type to grayscale.
     #[inline]
+    #[must_use]
     pub fn from_trait<C: Color>(c: C) -> Self {
         let lum = luminance_u8(c.red8(), c.green8(), c.blue8());
         Self::new_with_alpha(lum, c.alpha8())
@@ -192,18 +207,31 @@ impl Gray8 {
 
     /// Creates a grayscale color with specified alpha.
     #[inline]
+    #[must_use]
     pub const fn new_with_alpha(value: u8, alpha: u8) -> Self {
         Self { value, alpha }
     }
 
     /// Converts a two-element slice `[value, alpha]` to a grayscale color.
+    ///
+    /// # Panics
+    /// Panics if the slice length is less than 2.
     #[inline]
+    #[must_use]
     pub const fn from_slice(v: &[u8]) -> Self {
+        Self::new_with_alpha(v[0], v[1])
+    }
+
+    /// Converts a two-element array `[value, alpha]` to a grayscale color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array(v: [u8; 2]) -> Self {
         Self::new_with_alpha(v[0], v[1])
     }
 
     /// Returns the grayscale and alpha components as an array `[value, alpha]`.
     #[inline]
+    #[must_use]
     pub const fn into_array(&self) -> [u8; 2] {
         [self.value, self.alpha]
     }
@@ -223,16 +251,20 @@ pub struct Rgb8 {
 impl Rgb8 {
     /// Creates a new `Rgb8` color.
     #[inline]
+    #[must_use]
     pub const fn new(r: u8, g: u8, b: u8) -> Self {
         Rgb8 { r, g, b }
     }
+
     /// Converts a `Color` trait type to RGB.
     #[inline]
+    #[must_use]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red8(), c.green8(), c.blue8())
     }
 
     /// Creates an `Rgb8` color from wavelength and gamma correction.
+    #[must_use]
     pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
         let (r, g, b) = if (380.0..=440.0).contains(&w) {
             (-1.0 * (w - 440.0) / (440.0 - 380.0), 0.0, 1.0)
@@ -262,31 +294,45 @@ impl Rgb8 {
         Self::new(r as u8, g as u8, b as u8)
     }
 
+    /// Converts a three-element array `[r, g, b]` to an `Rgba8` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array(v: [u8; 3]) -> Self {
+        Self::new(v[0], v[1], v[2])
+    }
+
     /// Returns pure white color `(255, 255, 255)`.
     #[inline]
+    #[must_use]
     pub const fn white() -> Self {
         Self::new(255, 255, 255)
     }
     /// Returns pure black color `(0, 0, 0)`.
     #[inline]
+    #[must_use]
     pub const fn black() -> Self {
         Self::new(0, 0, 0)
     }
     /// Returns a grayscale color `(g, g, g)` based on a single intensity value.
     #[inline]
+    #[must_use]
     pub const fn gray(g: u8) -> Self {
         Self::new(g, g, g)
     }
 
     /// Converts a slice `[r, g, b]` to an `Rgb8` color.
-    // IMPROVE: CHECK slice length?
+    ///
+    /// # Panics
+    /// Panics if the slice length is less than 3.
     #[inline]
+    #[must_use]
     pub const fn from_slice(v: &[u8]) -> Self {
         Rgb8 { r: v[0], g: v[1], b: v[2] }
     }
 
     /// Returns the color components as an array `[r, g, b]`.
     #[inline]
+    #[must_use]
     pub const fn into_array(&self) -> [u8; 3] {
         [self.r, self.g, self.b]
     }
@@ -306,20 +352,30 @@ pub struct Rgba8pre {
 }
 
 impl Rgba8pre {
-    /// Converts a `Color` trait type to `Rgba8pre`.
-    #[inline]
-    pub fn from_trait<C: Color>(color: C) -> Self {
-        Self { r: color.red8(), g: color.green8(), b: color.blue8(), a: color.alpha8() }
-    }
-
     /// Creates a new premultiplied color from red, green, blue, and alpha values.
     #[inline]
+    #[must_use]
     pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
 
+    /// Converts a `Color` trait type to `Rgba8pre`.
+    #[inline]
+    #[must_use]
+    pub fn from_trait<C: Color>(color: C) -> Self {
+        Self { r: color.red8(), g: color.green8(), b: color.blue8(), a: color.alpha8() }
+    }
+
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8pre` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+
     /// Returns the premultiplied color components as an array `[r, g, b, a]`.
     #[inline]
+    #[must_use]
     pub const fn into_array(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
@@ -343,16 +399,33 @@ pub struct Srgba8 {
 impl Srgba8 {
     /// Creates a new sRGB color.
     #[inline]
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+    #[must_use]
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
 
     /// Converts an RGB `Color` trait type to sRGB.
+    #[inline]
+    #[must_use]
     pub fn from_rgb<C: Color>(c: C) -> Self {
         let r = cu8(rgb_to_srgb(c.red()));
         let g = cu8(rgb_to_srgb(c.green()));
         let b = cu8(rgb_to_srgb(c.blue()));
         Self::new(r, g, b, cu8(c.alpha()))
+    }
+
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8pre` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+
+    /// Returns the premultiplied color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array(&self) -> [u8; 4] {
+        [self.r, self.g, self.b, self.a]
     }
 }
 
@@ -372,18 +445,35 @@ pub struct Rgba32 {
 impl Rgba32 {
     /// Creates a new `Rgba32` color.
     #[inline]
+    #[must_use]
     pub const fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
         Self { r, g, b, a }
     }
 
     /// Converts a `Color` trait type to `Rgba32`.
     #[inline]
+    #[must_use]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red() as f32, c.green() as f32, c.blue() as f32, c.alpha() as f32)
     }
 
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba32` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array(v: [f32; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+
+    /// Returns the premultiplied color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array(&self) -> [f32; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
+
     /// Returns the color premultiplied by its alpha channel.
     // todoconst: abs
+    #[must_use]
     pub fn premultiply(&self) -> Self {
         if (self.a - 1.0).abs() <= f32::EPSILON {
             Rgba32::new(self.r, self.g, self.b, self.a)
