@@ -72,6 +72,7 @@ features = ["png", "pnm", "bmp", "jpeg"]
 # ==============================================================================
 no-default-features = true
 features = ["_docsrs"]
+rustdoc-args = [ "--html-in-header", "./DOCS/rustdoc-header.html" ]
 
 
 # examples
