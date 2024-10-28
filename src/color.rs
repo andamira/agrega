@@ -1,34 +1,69 @@
 //! Colors
+//
+// TOC
+// - utilities, mostly private
+// - public definitions
+// - implementations
+// - tests
 
 use crate::util::multiply_u8;
 #[allow(unused_imports)]
-use devela::ExtFloat;
+use devela::{iif, ExtFloat};
 
-/* private */
+/* utils */
 
 /// Convert an f64 [0,1] component to a u8 [0,255] component
-fn cu8(v: f64) -> u8 {
-    (v * 255.0).round() as u8
-}
+#[inline] #[must_use] #[rustfmt::skip]
+fn cu8(v: f64) -> u8 { (v * 255.0).round() as u8 }
 
 /// Convert from sRGB to RGB for a single component
+#[inline] #[must_use] #[rustfmt::skip]
 fn srgb_to_rgb(x: f64) -> f64 {
-    if x <= 0.04045 {
-        x / 12.92
-    } else {
-        ((x + 0.055) / 1.055).powf(2.4)
-    }
+    if x <= 0.04045 { x / 12.92 } else { ((x + 0.055) / 1.055).powf(2.4) }
 }
 /// Convert from RGB to sRGB for a single component
+#[inline] #[must_use] #[rustfmt::skip]
 fn rgb_to_srgb(x: f64) -> f64 {
-    if x <= 0.003_130_8 {
-        x * 12.92
-    } else {
-        1.055 * x.powf(1.0 / 2.4) - 0.055
-    }
+    if x <= 0.003_130_8 { x * 12.92 } else { 1.055 * x.powf(1.0 / 2.4) - 0.055 }
 }
 
-/* public */
+// Converts a `u8` color component to `f64` in the range [0.0, 1.0].
+#[inline] #[must_use] #[rustfmt::skip]
+fn color_u8_to_f64(x: u8) -> f64 { f64::from(x) / 255.0 }
+
+// Computes the luminance of an RGB color in `u8` and returns it as `u8`.
+#[inline] #[must_use] #[rustfmt::skip]
+fn luminance_u8(red: u8, green: u8, blue: u8) -> u8 {
+    (luminance(color_u8_to_f64(red), color_u8_to_f64(green), color_u8_to_f64(blue)) * 255.0).round()
+        as u8
+}
+
+/// Returns the luminance.
+#[inline] #[must_use] #[rustfmt::skip]
+pub const fn luminance(red: f64, green: f64, blue: f64) -> f64 {
+    0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+
+/// Returns the lightness.
+///
+/// $ (\text{max}(R, G, B) + \text{min}(R, G, B)) / 2 $
+#[inline] #[must_use] #[rustfmt::skip]
+pub const fn lightness(red: f64, green: f64, blue: f64) -> f64 {
+    let (mut cmax, mut cmin) = (red, red);
+    if green > cmax { cmax = green; }
+    if blue > cmax { cmax = blue; }
+    if green < cmin { cmin = green; }
+    if blue < cmin { cmin = blue; }
+    (cmax + cmin) / 2.0
+}
+
+/// Returns the average.
+#[inline] #[must_use] #[rustfmt::skip]
+pub const fn average(red: f64, green: f64, blue: f64) -> f64 {
+    (red + green + blue) / 3.0
+}
+
+/* public definitions */
 
 /// Access Color properties and compoents
 pub trait Color: core::fmt::Debug + Copy {
@@ -60,50 +95,50 @@ pub trait Color: core::fmt::Debug + Copy {
     fn is_premultiplied(&self) -> bool;
 }
 
-/// Color as Red, Green, Blue, and Alpha
+/// Represents a color with Red, Green, Blue, and Alpha (`u8` values).
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Rgba8 {
-    /// Red
+    /// Red channel (0-255).
     pub r: u8,
-    /// Green
+    /// Green channel (0-255).
     pub g: u8,
-    /// Blue
+    /// Blue channel (0-255).
     pub b: u8,
-    /// Alpha
+    /// Alpha channel (0-255).
     pub a: u8,
 }
 
 impl Rgba8 {
+    /// Creates a new `Rgba8` color from red, green, blue, and alpha components.
+    #[inline]
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Rgba8 { r, g, b, a }
+    }
+    /// Constructs `Rgba8` from any type implementing `Color` trait.
+    #[inline]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red8(), c.green8(), c.blue8(), c.alpha8())
     }
-    /// White Color (255,255,255,255)
-    pub fn white() -> Self {
-        Self::new(255, 255, 255, 255)
-    }
-    /// Black Color (0,0,0,255)
-    pub fn black() -> Self {
-        Self::new(0, 0, 0, 255)
-    }
-    /// Create new color
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Rgba8 { r, g, b, a }
-    }
-    pub fn into_slice(&self) -> [u8; 4] {
-        [self.r, self.g, self.b, self.a]
-    }
-    /// Crate new color from a wavelength and gamma
+    /// Creates a color from a wavelength and gamma correction factor.
+    #[inline]
     pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
         let c = Rgb8::from_wavelength_gamma(w, gamma);
-        Self::from_trait(c)
+        Self::from_trait(c) // IMPROVE
     }
-    pub fn clear(&mut self) {
-        self.r = 0;
-        self.g = 0;
-        self.b = 0;
-        self.a = 0;
+
+    /// Returns pure white (`255, 255, 255, 255`).
+    #[inline]
+    pub const fn white() -> Self {
+        Self::new(255, 255, 255, 255)
     }
-    pub fn premultiply(self) -> Rgba8pre {
+    /// Returns pure black (`0, 0, 0, 255`).
+    #[inline]
+    pub const fn black() -> Self {
+        Self::new(0, 0, 0, 255)
+    }
+
+    /// Returns the color premultiplied by its alpha.
+    pub const fn premultiply(self) -> Rgba8pre {
         match self.a {
             255 => Rgba8pre::new(self.r, self.g, self.b, self.a),
             0 => Rgba8pre::new(0, 0, 0, self.a),
@@ -115,97 +150,89 @@ impl Rgba8 {
             }
         }
     }
+
+    /// Sets the color to fully transparent black (`0, 0, 0, 0`).
+    #[inline]
+    pub fn clear(&mut self) {
+        self.r = 0;
+        self.g = 0;
+        self.b = 0;
+        self.a = 0;
+    }
+
+    /// Returns the color components as an array `[r, g, b, a]`.
+    #[inline]
+    pub const fn into_array(&self) -> [u8; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
 }
 
-/// Gray scale
-#[derive(Debug, Copy, Clone, Default, PartialEq)]
+/// Grayscale color with optional transparency.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Gray8 {
+    /// Grayscale intensity (0-255).
     pub value: u8,
+    /// Alpha transparency (0-255).
     pub alpha: u8,
 }
+
 impl Gray8 {
+    /// Creates a new opaque grayscale color.
+    #[inline]
+    pub const fn new(value: u8) -> Self {
+        Self { value, alpha: 255 }
+    }
+
+    /// Converts a `Color` trait type to grayscale.
+    #[inline]
     pub fn from_trait<C: Color>(c: C) -> Self {
         let lum = luminance_u8(c.red8(), c.green8(), c.blue8());
         Self::new_with_alpha(lum, c.alpha8())
     }
-    /// Create a new gray scale value
-    pub fn new(value: u8) -> Self {
-        Self { value, alpha: 255 }
-    }
-    pub fn new_with_alpha(value: u8, alpha: u8) -> Self {
+
+    /// Creates a grayscale color with specified alpha.
+    #[inline]
+    pub const fn new_with_alpha(value: u8, alpha: u8) -> Self {
         Self { value, alpha }
     }
-    pub fn from_slice(v: &[u8]) -> Self {
+
+    /// Converts a two-element slice `[value, alpha]` to a grayscale color.
+    #[inline]
+    pub const fn from_slice(v: &[u8]) -> Self {
         Self::new_with_alpha(v[0], v[1])
     }
-    pub fn into_slice(&self) -> [u8; 2] {
+
+    /// Returns the grayscale and alpha components as an array `[value, alpha]`.
+    #[inline]
+    pub const fn into_array(&self) -> [u8; 2] {
         [self.value, self.alpha]
     }
 }
 
-fn luminance_u8(red: u8, green: u8, blue: u8) -> u8 {
-    (luminance(color_u8_to_f64(red), color_u8_to_f64(green), color_u8_to_f64(blue)) * 255.0).round()
-        as u8
-}
-pub fn luminance(red: f64, green: f64, blue: f64) -> f64 {
-    0.2126 * red + 0.7152 * green + 0.0722 * blue
-}
-
-/// Lightness (max(R, G, B) + min(R, G, B)) / 2
-pub fn lightness(red: f64, green: f64, blue: f64) -> f64 {
-    let mut cmax = red;
-    let mut cmin = red;
-    if green > cmax {
-        cmax = green;
-    }
-    if blue > cmax {
-        cmax = blue;
-    }
-    if green < cmin {
-        cmin = green;
-    }
-    if blue < cmin {
-        cmin = blue;
-    }
-
-    (cmax + cmin) / 2.0
-}
-/// Average
-pub fn average(red: f64, green: f64, blue: f64) -> f64 {
-    (red + green + blue) / 3.0
-}
-
-/// Color as Red, Green, Blue
+/// RGB color with Red, Green, and Blue components.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Rgb8 {
+    /// Red channel (0-255).
     pub r: u8,
+    /// Green channel (0-255).
     pub g: u8,
+    /// Blue channel (0-255).
     pub b: u8,
 }
 
 impl Rgb8 {
+    /// Creates a new `Rgb8` color.
+    #[inline]
+    pub const fn new(r: u8, g: u8, b: u8) -> Self {
+        Rgb8 { r, g, b }
+    }
+    /// Converts a `Color` trait type to RGB.
     #[inline]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red8(), c.green8(), c.blue8())
     }
-    pub const fn white() -> Self {
-        Self::new(255, 255, 255)
-    }
-    pub const fn black() -> Self {
-        Self::new(0, 0, 0)
-    }
-    pub const fn new(r: u8, g: u8, b: u8) -> Self {
-        Rgb8 { r, g, b }
-    }
-    pub const fn gray(g: u8) -> Self {
-        Self::new(g, g, g)
-    }
-    pub fn from_slice(v: &[u8]) -> Self {
-        Rgb8 { r: v[0], g: v[1], b: v[2] }
-    }
-    pub fn into_slice(&self) -> [u8; 3] {
-        [self.r, self.g, self.b]
-    }
+
+    /// Creates an `Rgb8` color from wavelength and gamma correction.
     pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
         let (r, g, b) = if (380.0..=440.0).contains(&w) {
             (-1.0 * (w - 440.0) / (440.0 - 380.0), 0.0, 1.0)
@@ -234,77 +261,129 @@ impl Rgb8 {
         let b = (b * scale).powf(gamma) * 255.0;
         Self::new(r as u8, g as u8, b as u8)
     }
+
+    /// Returns pure white color `(255, 255, 255)`.
+    #[inline]
+    pub const fn white() -> Self {
+        Self::new(255, 255, 255)
+    }
+    /// Returns pure black color `(0, 0, 0)`.
+    #[inline]
+    pub const fn black() -> Self {
+        Self::new(0, 0, 0)
+    }
+    /// Returns a grayscale color `(g, g, g)` based on a single intensity value.
+    #[inline]
+    pub const fn gray(g: u8) -> Self {
+        Self::new(g, g, g)
+    }
+
+    /// Converts a slice `[r, g, b]` to an `Rgb8` color.
+    // IMPROVE: CHECK slice length?
+    #[inline]
+    pub const fn from_slice(v: &[u8]) -> Self {
+        Rgb8 { r: v[0], g: v[1], b: v[2] }
+    }
+
+    /// Returns the color components as an array `[r, g, b]`.
+    #[inline]
+    pub const fn into_array(&self) -> [u8; 3] {
+        [self.r, self.g, self.b]
+    }
 }
 
-fn color_u8_to_f64(x: u8) -> f64 {
-    f64::from(x) / 255.0
-}
-
-/// Color as Red, Green, Blue, and Alpha with pre-multiplied components
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+/// RGBA color with premultiplied components.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Rgba8pre {
+    /// Red channel with premultiplied alpha.
     pub r: u8,
+    /// Green channel with premultiplied alpha.
     pub g: u8,
+    /// Blue channel with premultiplied alpha.
     pub b: u8,
+    /// Alpha channel.
     pub a: u8,
 }
 
 impl Rgba8pre {
-    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Self { r, g, b, a }
-    }
+    /// Converts a `Color` trait type to `Rgba8pre`.
+    #[inline]
     pub fn from_trait<C: Color>(color: C) -> Self {
         Self { r: color.red8(), g: color.green8(), b: color.blue8(), a: color.alpha8() }
     }
-    pub fn into_slice(&self) -> [u8; 4] {
+
+    /// Creates a new premultiplied color from red, green, blue, and alpha values.
+    #[inline]
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Self { r, g, b, a }
+    }
+
+    /// Returns the premultiplied color components as an array `[r, g, b, a]`.
+    #[inline]
+    pub const fn into_array(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
 }
 
-/// Color as standard Red, Green, Blue, Alpha
+/// Standard sRGB color with Red, Green, Blue, and Alpha components.
 ///
 /// See <https://en.wikipedia.org/wiki/SRGB>
-///
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Srgba8 {
-    /// Red
+    /// Red channel (0-255).
     r: u8,
-    /// Green
+    /// Green channel (0-255).
     g: u8,
-    /// Blue
+    /// Blue channel (0-255).
     b: u8,
-    /// Alpha
+    /// Alpha channel (0-255).
     a: u8,
 }
 
 impl Srgba8 {
+    /// Creates a new sRGB color.
+    #[inline]
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Self { r, g, b, a }
+    }
+
+    /// Converts an RGB `Color` trait type to sRGB.
     pub fn from_rgb<C: Color>(c: C) -> Self {
         let r = cu8(rgb_to_srgb(c.red()));
         let g = cu8(rgb_to_srgb(c.green()));
         let b = cu8(rgb_to_srgb(c.blue()));
         Self::new(r, g, b, cu8(c.alpha()))
     }
-    /// Create a new Srgba8 color
-    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Self { r, g, b, a }
-    }
 }
 
+/// RGBA color with `f32` components for higher precision.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct Rgba32 {
+    /// Red channel (0.0-1.0).
     pub r: f32,
+    /// Green channel (0.0-1.0).
     pub g: f32,
+    /// Blue channel (0.0-1.0).
     pub b: f32,
+    /// Alpha channel (0.0-1.0).
     pub a: f32,
 }
 
 impl Rgba32 {
+    /// Creates a new `Rgba32` color.
+    #[inline]
+    pub const fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
+        Self { r, g, b, a }
+    }
+
+    /// Converts a `Color` trait type to `Rgba32`.
+    #[inline]
     pub fn from_trait<C: Color>(c: C) -> Self {
         Self::new(c.red() as f32, c.green() as f32, c.blue() as f32, c.alpha() as f32)
     }
-    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
-        Self { r, g, b, a }
-    }
+
+    /// Returns the color premultiplied by its alpha channel.
+    // todoconst: abs
     pub fn premultiply(&self) -> Self {
         if (self.a - 1.0).abs() <= f32::EPSILON {
             Rgba32::new(self.r, self.g, self.b, self.a)
@@ -319,181 +398,76 @@ impl Rgba32 {
     }
 }
 
-impl Color for Rgba8 {
-    fn red(&self) -> f64 {
-        color_u8_to_f64(self.r)
+#[rustfmt::skip]
+mod impl_color {
+    use super::*;
+
+    impl Color for Rgba8 {
+        #[inline] fn red(&self) -> f64 { color_u8_to_f64(self.r) }
+        #[inline] fn green(&self) -> f64 { color_u8_to_f64(self.g) }
+        #[inline] fn blue(&self) -> f64 { color_u8_to_f64(self.b) }
+        #[inline] fn alpha(&self) -> f64 { color_u8_to_f64(self.a) }
+        #[inline] fn alpha8(&self) -> u8 { self.a }
+        #[inline] fn red8(&self) -> u8 { self.r }
+        #[inline] fn green8(&self) -> u8 { self.g }
+        #[inline] fn blue8(&self) -> u8 { self.b }
+        #[inline] fn is_premultiplied(&self) -> bool { false }
     }
-    fn green(&self) -> f64 {
-        color_u8_to_f64(self.g)
+    impl Color for Rgb8 {
+        #[inline] fn red(&self) -> f64 { color_u8_to_f64(self.r) }
+        #[inline] fn green(&self) -> f64 { color_u8_to_f64(self.g) }
+        #[inline] fn blue(&self) -> f64 { color_u8_to_f64(self.b) }
+        #[inline] fn alpha(&self) -> f64 { 1.0 }
+        #[inline] fn alpha8(&self) -> u8 { 255 }
+        #[inline] fn red8(&self) -> u8 { self.r }
+        #[inline] fn green8(&self) -> u8 { self.g }
+        #[inline] fn blue8(&self) -> u8 { self.b }
+        #[inline] fn is_premultiplied(&self) -> bool { false }
     }
-    fn blue(&self) -> f64 {
-        color_u8_to_f64(self.b)
+    impl Color for Rgba8pre {
+        #[inline] fn red(&self) -> f64 { color_u8_to_f64(self.r) }
+        #[inline] fn green(&self) -> f64 { color_u8_to_f64(self.g) }
+        #[inline] fn blue(&self) -> f64 { color_u8_to_f64(self.b) }
+        #[inline] fn alpha(&self) -> f64 { color_u8_to_f64(self.a) }
+        #[inline] fn alpha8(&self) -> u8 { self.a }
+        #[inline] fn red8(&self) -> u8 { self.r }
+        #[inline] fn green8(&self) -> u8 { self.g }
+        #[inline] fn blue8(&self) -> u8 { self.b }
+        #[inline] fn is_premultiplied(&self) -> bool { true }
+        #[inline] fn is_transparent(&self) -> bool { self.a == 0 }
     }
-    fn alpha(&self) -> f64 {
-        color_u8_to_f64(self.a)
+    impl Color for Srgba8 {
+        #[inline] fn red(&self) -> f64 { srgb_to_rgb(color_u8_to_f64(self.r)) }
+        #[inline] fn green(&self) -> f64 { srgb_to_rgb(color_u8_to_f64(self.g)) }
+        #[inline] fn blue(&self) -> f64 { srgb_to_rgb(color_u8_to_f64(self.b)) }
+        #[inline] fn alpha(&self) -> f64 { color_u8_to_f64(self.a) }
+        #[inline] fn alpha8(&self) -> u8 { cu8(self.alpha()) }
+        #[inline] fn red8(&self) -> u8 { cu8(self.red()) }
+        #[inline] fn green8(&self) -> u8 { cu8(self.green()) }
+        #[inline] fn blue8(&self) -> u8 { cu8(self.blue()) }
+        #[inline] fn is_premultiplied(&self) -> bool { false }
     }
-    fn alpha8(&self) -> u8 {
-        self.a
+    impl Color for Rgba32 {
+        #[inline] fn red(&self) -> f64 { f64::from(self.r) }
+        #[inline] fn green(&self) -> f64 { f64::from(self.g) }
+        #[inline] fn blue(&self) -> f64 { f64::from(self.b) }
+        #[inline] fn alpha(&self) -> f64 { f64::from(self.a) }
+        #[inline] fn alpha8(&self) -> u8 { cu8(self.alpha()) }
+        #[inline] fn red8(&self) -> u8 { cu8(self.red()) }
+        #[inline] fn green8(&self) -> u8 { cu8(self.green()) }
+        #[inline] fn blue8(&self) -> u8 { cu8(self.blue()) }
+        #[inline] fn is_premultiplied(&self) -> bool { false }
     }
-    fn red8(&self) -> u8 {
-        self.r
-    }
-    fn green8(&self) -> u8 {
-        self.g
-    }
-    fn blue8(&self) -> u8 {
-        self.b
-    }
-    fn is_premultiplied(&self) -> bool {
-        false
-    }
-}
-impl Color for Rgb8 {
-    fn red(&self) -> f64 {
-        color_u8_to_f64(self.r)
-    }
-    fn green(&self) -> f64 {
-        color_u8_to_f64(self.g)
-    }
-    fn blue(&self) -> f64 {
-        color_u8_to_f64(self.b)
-    }
-    fn alpha(&self) -> f64 {
-        1.0
-    }
-    fn alpha8(&self) -> u8 {
-        255
-    }
-    fn red8(&self) -> u8 {
-        self.r
-    }
-    fn green8(&self) -> u8 {
-        self.g
-    }
-    fn blue8(&self) -> u8 {
-        self.b
-    }
-    fn is_premultiplied(&self) -> bool {
-        false
-    }
-}
-impl Color for Rgba8pre {
-    fn red(&self) -> f64 {
-        color_u8_to_f64(self.r)
-    }
-    fn green(&self) -> f64 {
-        color_u8_to_f64(self.g)
-    }
-    fn blue(&self) -> f64 {
-        color_u8_to_f64(self.b)
-    }
-    fn alpha(&self) -> f64 {
-        color_u8_to_f64(self.a)
-    }
-    fn alpha8(&self) -> u8 {
-        self.a
-    }
-    fn red8(&self) -> u8 {
-        self.r
-    }
-    fn green8(&self) -> u8 {
-        self.g
-    }
-    fn blue8(&self) -> u8 {
-        self.b
-    }
-    fn is_premultiplied(&self) -> bool {
-        true
-    }
-    fn is_transparent(&self) -> bool {
-        self.a == 0
-    }
-}
-impl Color for Srgba8 {
-    fn red(&self) -> f64 {
-        srgb_to_rgb(color_u8_to_f64(self.r))
-    }
-    fn green(&self) -> f64 {
-        srgb_to_rgb(color_u8_to_f64(self.g))
-    }
-    fn blue(&self) -> f64 {
-        srgb_to_rgb(color_u8_to_f64(self.b))
-    }
-    fn alpha(&self) -> f64 {
-        color_u8_to_f64(self.a)
-    }
-    fn alpha8(&self) -> u8 {
-        cu8(self.alpha())
-    }
-    fn red8(&self) -> u8 {
-        cu8(self.red())
-    }
-    fn green8(&self) -> u8 {
-        cu8(self.green())
-    }
-    fn blue8(&self) -> u8 {
-        cu8(self.blue())
-    }
-    fn is_premultiplied(&self) -> bool {
-        false
-    }
-}
-impl Color for Rgba32 {
-    fn red(&self) -> f64 {
-        f64::from(self.r)
-    }
-    fn green(&self) -> f64 {
-        f64::from(self.g)
-    }
-    fn blue(&self) -> f64 {
-        f64::from(self.b)
-    }
-    fn alpha(&self) -> f64 {
-        f64::from(self.a)
-    }
-    fn alpha8(&self) -> u8 {
-        cu8(self.alpha())
-    }
-    fn red8(&self) -> u8 {
-        cu8(self.red())
-    }
-    fn green8(&self) -> u8 {
-        cu8(self.green())
-    }
-    fn blue8(&self) -> u8 {
-        cu8(self.blue())
-    }
-    fn is_premultiplied(&self) -> bool {
-        false
-    }
-}
-impl Color for Gray8 {
-    fn red(&self) -> f64 {
-        color_u8_to_f64(self.value)
-    }
-    fn green(&self) -> f64 {
-        color_u8_to_f64(self.value)
-    }
-    fn blue(&self) -> f64 {
-        color_u8_to_f64(self.value)
-    }
-    fn alpha(&self) -> f64 {
-        color_u8_to_f64(self.alpha)
-    }
-    fn alpha8(&self) -> u8 {
-        self.alpha
-    }
-    fn red8(&self) -> u8 {
-        self.value
-    }
-    fn green8(&self) -> u8 {
-        self.value
-    }
-    fn blue8(&self) -> u8 {
-        self.value
-    }
-    fn is_premultiplied(&self) -> bool {
-        false
+    impl Color for Gray8 {
+        #[inline] fn red(&self) -> f64 { color_u8_to_f64(self.value) }
+        #[inline] fn green(&self) -> f64 { color_u8_to_f64(self.value) }
+        #[inline] fn blue(&self) -> f64 { color_u8_to_f64(self.value) }
+        #[inline] fn alpha(&self) -> f64 { color_u8_to_f64(self.alpha) }
+        #[inline] fn alpha8(&self) -> u8 { self.alpha }
+        #[inline] fn red8(&self) -> u8 { self.value }
+        #[inline] fn green8(&self) -> u8 { self.value }
+        #[inline] fn blue8(&self) -> u8 { self.value }
+        #[inline] fn is_premultiplied(&self) -> bool { false }
     }
 }
 
