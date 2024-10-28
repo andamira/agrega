@@ -27,6 +27,7 @@ impl Cell {
     const fn new() -> Self {
         Cell { x: i64::MAX, y: i64::MAX, cover: 0, area: 0 }
     }
+
     /// Create new cell at position (x,y)
     pub const fn at(x: i64, y: i64) -> Self {
         let mut c = Cell::new();
@@ -34,10 +35,12 @@ impl Cell {
         c.y = y;
         c
     }
+
     /// Compare two cell positionsx
     pub fn equal(&self, x: i64, y: i64) -> bool {
         self.x - x == 0 && self.y - y == 0
     }
+
     // / Test if cover and area are equal to 0
     //pub fn is_empty(&self) -> bool {
     //    self.cover == 0 && self.area == 0
@@ -87,6 +90,7 @@ impl RasterizerCell {
     pub fn total_cells(&self) -> usize {
         self.cells.len()
     }
+
     /// Sort cells into sorted_y cells
     ///
     /// Cells are distributed into y bins, then sorted by x value

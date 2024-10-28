@@ -4,7 +4,7 @@ use crate::{LineParameters, RenderData, Rgba8, Vertex};
 #[cfg(any(feature = "std", feature = "no_std"))]
 use crate::Color;
 
-/// Source of vertex points
+/// A source of vertex points.
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
     feature = "nightly",
@@ -13,6 +13,7 @@ use crate::Color;
 pub trait VertexSource {
     /// Rewind the vertex source (unused)
     fn rewind(&self) {}
+
     /// Get values from the source
     ///
     /// This could be turned into an iterator
@@ -77,6 +78,7 @@ pub trait Pixel {
     fn set<C: Color>(&mut self, id: (usize, usize), c: C);
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, c: C);
     fn blend_pix<C: Color>(&mut self, id: (usize, usize), c: C, cover: u64);
+
     /// Fill the data with the specified `color`
     fn fill<C: Color>(&mut self, color: C);
     /// Copy or blend a pixel at `id` with `color`
@@ -97,6 +99,7 @@ pub trait Pixel {
             }
         }
     }
+
     /// Copy or blend a pixel at `id` with `color` and a `cover`
     ///
     /// If `color` [`is_opaque`] *and* `cover` equals [`cover_mask`] then
@@ -147,6 +150,7 @@ pub trait Pixel {
             }
         }
     }
+
     /// Copy or Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`) with `cover`.
     fn blend_hline<C: Color>(&mut self, x: i64, y: i64, len: i64, color: C, cover: u64) {
         if color.is_transparent() {
@@ -161,6 +165,7 @@ pub trait Pixel {
             }
         }
     }
+
     /// Blend a single `color` from (`x`,`y`) to (`x+len-1`,`y`) with collection of `covers`.
     fn blend_solid_hspan<C: Color>(&mut self, x: i64, y: i64, len: i64, color: C, covers: &[u64]) {
         assert_eq!(len as usize, covers.len());
@@ -168,6 +173,7 @@ pub trait Pixel {
             self.blend_hline(x + i as i64, y, 1, color, cover);
         }
     }
+
     /// Copy or Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`) with `cover`.
     fn blend_vline<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, cover: u64) {
         if c.is_transparent() {
@@ -184,6 +190,7 @@ pub trait Pixel {
             }
         }
     }
+
     /// Blend a single `color` from (`x`,`y`) to (`x`,`y+len-1`) with collection of `covers`.
     fn blend_solid_vspan<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, covers: &[u64]) {
         assert_eq!(len as usize, covers.len());
@@ -191,6 +198,7 @@ pub trait Pixel {
             self.blend_vline(x, y + i as i64, 1, c, cover);
         }
     }
+
     /// Blend a collection of `colors` from (`x`,`y`) to (`x+len-1`,`y`) with
     /// either a collection of `covers` or a single `cover`.
     ///
@@ -221,6 +229,7 @@ pub trait Pixel {
             }
         }
     }
+
     /// Blend a collection of `colors` from (`x`,`y`) to (`x`,`y+len-1`) with
     /// either a collection of `covers` or a single `cover`.
     ///
@@ -253,19 +262,6 @@ pub trait Pixel {
     }
 }
 
-// TODO
-// pub(crate) trait LineInterp {
-//     fn init(&mut self);
-//     fn step_hor(&mut self);
-//     fn step_ver(&mut self);
-// }
-
-pub(crate) trait RenderOutline {
-    fn cover(&self, d: i64) -> u64;
-    fn blend_solid_hspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
-    fn blend_solid_vspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
-}
-
 /// Functions for Drawing Outlines.
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 #[cfg_attr(
@@ -286,4 +282,17 @@ pub trait DrawOutline {
     where
         F: Fn(i64) -> bool;
     fn pie(&mut self, xc: i64, y: i64, x1: i64, y1: i64, x2: i64, y2: i64);
+}
+
+// TODO
+// pub(crate) trait LineInterp {
+//     fn init(&mut self);
+//     fn step_hor(&mut self);
+//     fn step_ver(&mut self);
+// }
+
+pub(crate) trait RenderOutline {
+    fn cover(&self, d: i64) -> u64;
+    fn blend_solid_hspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
+    fn blend_solid_vspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
 }

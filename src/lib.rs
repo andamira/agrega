@@ -16,6 +16,7 @@ compile_error!("You can't enable the `std` and `no_std` features at the same tim
 #[cfg(all(feature = "safe", feature = "unsafe"))]
 compile_error!("You can't enable `safe` and `unsafe*` features at the same time.");
 
+// allows a group of items to share the same cfg options
 #[allow(unused_macros)]
 macro_rules! items { ( $($item:item)* ) => { $($item)* }; }
 

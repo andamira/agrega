@@ -10,10 +10,7 @@ pub struct RenderingBase<T> {
     pub pixf: T,
 }
 
-impl<T> RenderingBase<T>
-where
-    T: Pixel,
-{
+impl<T: Pixel> RenderingBase<T> {
     /// Create new Rendering Base from Pixel Format
     pub fn new(pixf: T) -> RenderingBase<T> {
         RenderingBase { pixf }

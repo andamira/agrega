@@ -101,7 +101,7 @@ use_field_init_shorthand = true # *false NOTE
 # granular width configuration settings, that respectively control when
 # formatted constructs are multi-lined/vertical based on width.
 # https://rust-lang.github.io/rustfmt/?search=#use_small_heuristics
-use_small_heuristics = "Default" # *Default,Off,Max
+use_small_heuristics = "Max" # *Default,Off,Max NOTE
 
 # Replace uses of the try! macro by the ? shorthand.
 # https://rust-lang.github.io/rustfmt/?search=#use_try_shorthand 

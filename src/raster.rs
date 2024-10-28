@@ -40,7 +40,7 @@ pub enum PathStatus {
     LineTo,
 }
 
-/// Rasterizer Anti-Alias using Scanline
+/// Rasterizer Anti-Alias using Scanline.
 #[derive(Debug)]
 pub struct RasterizerScanline {
     /// Clipping Region
@@ -75,6 +75,7 @@ impl RasterizerScanline {
         self.outline.reset();
         self.status = PathStatus::Initial;
     }
+
     /// Add a Path
     ///
     /// Walks the path from the VertexSource and rasterizes it
@@ -177,6 +178,7 @@ impl RasterizerScanline {
         self.scan_y += 1;
         true
     }
+
     /// Return minimum x value from the RasterizerCell
     pub fn min_x(&self) -> i64 {
         self.outline.min_x
@@ -219,6 +221,7 @@ impl RasterizerScanline {
             .map(|v| (v * aa_mask).round() as u64)
             .collect();
     }
+
     /// Create a new RasterizerScanline with a gamma function
     ///
     /// See gamma() function for description
@@ -231,6 +234,7 @@ impl RasterizerScanline {
         new.gamma(gfunc);
         new
     }
+
     /// Set Clip Box
     pub fn clip_box(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) {
         self.clipper.clip_box(
@@ -240,22 +244,25 @@ impl RasterizerScanline {
             RasConvInt::upscale(y2),
         );
     }
+
     /// Move to point (x,y)
     ///
-    /// Sets point as the initial point
+    /// Sets point as the initial point.
     pub fn move_to(&mut self, x: f64, y: f64) {
         self.x0 = RasConvInt::upscale(x);
         self.y0 = RasConvInt::upscale(y);
         self.clipper.move_to(self.x0, self.y0);
         self.status = PathStatus::MoveTo;
     }
-    /// Draw line from previous point to point (x,y)
+
+    /// Draw a line from previous point to new point (x,y)
     pub fn line_to(&mut self, x: f64, y: f64) {
         let x = RasConvInt::upscale(x);
         let y = RasConvInt::upscale(y);
         self.clipper.line_to(&mut self.outline, x, y);
         self.status = PathStatus::LineTo;
     }
+
     /// Close the current polygon
     ///
     /// Draw a line from current point to initial "move to" point
@@ -265,6 +272,7 @@ impl RasterizerScanline {
             self.status = PathStatus::Closed;
         }
     }
+
     /// Calculate alpha term based on area
     ///
     ///
