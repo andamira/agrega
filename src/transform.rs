@@ -1,36 +1,72 @@
 //! Transformations
 
-use crate::{
-    paths::{Path, Vertex},
-    VertexSource,
-};
-use alloc::{vec, vec::Vec};
 use core::ops::Mul;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
-/// Transformation
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+/// A 2D affine transformation matrix that supports translation, scaling, rotation, and skewing.
+// TODO:FUTURE:IMPROVE: use devela matrix
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Transform {
+    /// Scale in the x-direction
     pub sx: f64,
+    /// Scale in the y-direction
     pub sy: f64,
+    /// Shear in the x-direction
     pub shx: f64,
+    /// Shear in the y-direction
     pub shy: f64,
+    /// Translation in the x-direction
     pub tx: f64,
+    /// Translation in the y-direction
     pub ty: f64,
 }
 
 impl Transform {
-    /// Creates a new Transform
-    pub fn new() -> Self {
+    /// Creates a new, identity Transform with no scaling, rotation, or translation.
+    #[inline]
+    #[must_use]
+    pub const fn new() -> Transform {
         Self { sx: 1.0, sy: 1.0, shx: 0.0, shy: 0.0, tx: 0.0, ty: 0.0 }
     }
-    /// Add a translation to the transform
+
+    /// Creates a scaling transformation with factors `sx` and `sy`.
+    #[inline]
+    #[must_use]
+    pub fn new_scale(sx: f64, sy: f64) -> Transform {
+        let mut t = Self::new();
+        t.scale(sx, sy);
+        t
+    }
+
+    /// Creates a translation transformation that moves by `(tx, ty)`.
+    #[inline]
+    #[must_use]
+    pub fn new_translate(tx: f64, ty: f64) -> Transform {
+        let mut t = Self::new();
+        t.translate(tx, ty);
+        t
+    }
+    /// Creates a rotation transformation by `ang` radians.
+    #[inline]
+    #[must_use]
+    pub fn new_rotate(ang: f64) -> Transform {
+        let mut t = Self::new();
+        t.rotate(ang);
+        t
+    }
+
+    /* */
+
+    /// Adds a translation by `(dx, dy)` to the transform.
+    #[inline]
     pub fn translate(&mut self, dx: f64, dy: f64) {
         self.tx += dx;
         self.ty += dy;
     }
-    /// Add a scaling to the transform
+
+    /// Adds a scaling factor in the x and y directions.
+    #[inline]
     pub fn scale(&mut self, sx: f64, sy: f64) {
         self.sx *= sx;
         self.shx *= sx;
@@ -39,9 +75,8 @@ impl Transform {
         self.shy *= sy;
         self.ty *= sy;
     }
-    /// Add a rotation to the transform
-    ///
-    /// angle is in radians
+
+    /// Adds a rotation (in radians) around the origin.
     pub fn rotate(&mut self, angle: f64) {
         let ca = angle.cos();
         let sa = angle.sin();
@@ -56,13 +91,21 @@ impl Transform {
         self.tx = t4;
     }
 
-    /// Perform the transform
-    pub fn transform(&self, x: f64, y: f64) -> (f64, f64) {
+    /// Applies the transformation to a point `(x, y)`, returning the transformed coordinates.
+    #[inline]
+    #[must_use]
+    pub const fn transform(&self, x: f64, y: f64) -> (f64, f64) {
         (x * self.sx + y * self.shx + self.tx, x * self.shy + y * self.sy + self.ty)
     }
-    fn determinant(&self) -> f64 {
+
+    // Calculates the determinant of the transformation matrix.
+    #[inline]
+    #[must_use]
+    const fn determinant(&self) -> f64 {
         self.sx * self.sy - self.shy * self.shx
     }
+
+    /// Inverts the transform if possible, effectively reversing its effect.
     pub fn invert(&mut self) {
         let d = 1.0 / self.determinant();
         let t0 = self.sy * d;
@@ -75,7 +118,9 @@ impl Transform {
         self.sx = t0;
         self.tx = t4;
     }
-    pub fn mul_transform(&self, m: &Transform) -> Self {
+
+    /// Multiplies this transform by another, combining their transformations.
+    pub const fn mul_transform(&self, m: &Transform) -> Self {
         let t0 = self.sx * m.sx + self.shy * m.shx;
         let t2 = self.shx * m.sx + self.sy * m.shx;
         let t4 = self.tx * m.sx + self.ty * m.shx + m.tx;
@@ -87,58 +132,11 @@ impl Transform {
         let tx = t4;
         Transform { sx, sy, tx, ty, shx, shy }
     }
-    pub fn new_scale(sx: f64, sy: f64) -> Transform {
-        let mut t = Self::new();
-        t.scale(sx, sy);
-        t
-    }
-    pub fn new_translate(tx: f64, ty: f64) -> Transform {
-        let mut t = Self::new();
-        t.translate(tx, ty);
-        t
-    }
-    pub fn new_rotate(ang: f64) -> Transform {
-        let mut t = Self::new();
-        t.rotate(ang);
-        t
-    }
 }
 
 impl Mul<Transform> for Transform {
     type Output = Transform;
     fn mul(self, rhs: Transform) -> Self {
         self.mul_transform(&rhs)
-    }
-}
-
-/// Path Transform
-#[derive(Debug, Default)]
-pub struct ConvTransform {
-    /// Source Path to Transform
-    pub source: Path,
-    /// Transform to apply
-    pub trans: Transform,
-}
-
-impl VertexSource for ConvTransform {
-    /// Apply the Transform
-    fn xconvert(&self) -> Vec<Vertex<f64>> {
-        self.transform()
-    }
-}
-
-impl ConvTransform {
-    /// Create a new Path Transform
-    pub fn new(source: Path, trans: Transform) -> Self {
-        Self { source, trans }
-    }
-    /// Transform the Path
-    pub fn transform(&self) -> Vec<Vertex<f64>> {
-        let mut out = vec![];
-        for v in &self.source.xconvert() {
-            let (x, y) = self.trans.transform(v.x, v.y);
-            out.push(Vertex::new(x, y, v.cmd));
-        }
-        out
     }
 }

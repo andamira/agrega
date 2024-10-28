@@ -1,6 +1,6 @@
 // agrega::paths
 
-use crate::{clip::Rectangle, VertexSource};
+use crate::{Rectangle, Transform, VertexSource};
 use alloc::{vec, vec::Vec};
 use core::f64::consts::PI;
 use devela::iif;
@@ -136,6 +136,31 @@ impl Path {
     #[inline]
     pub fn arrange_orientations(&mut self, dir: PathOrientation) {
         arrange_orientations(self, dir);
+    }
+
+    /// Applies the transformation to each vertex in the path in place.
+    pub fn transform(&mut self, trans: &Transform) {
+        for vertex in &mut self.vertices {
+            let (x, y) = trans.transform(vertex.x, vertex.y);
+            vertex.x = x;
+            vertex.y = y;
+        }
+    }
+
+    /// Returns a new path with the transformation applied to each vertex,
+    /// leaving the original path unaltered.
+    #[must_use]
+    pub fn transformed(&self, trans: &Transform) -> Path {
+        let transformed_vertices = self
+            .vertices
+            .iter()
+            .map(|v| {
+                let (x, y) = trans.transform(v.x, v.y);
+                Vertex::new(x, y, v.cmd)
+            })
+            .collect();
+
+        Path { vertices: transformed_vertices }
     }
 }
 
