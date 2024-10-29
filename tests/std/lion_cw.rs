@@ -1,4 +1,4 @@
-use agrega::Render;
+use agrega::{Path, Render};
 use std::fs;
 
 fn parse_lion() -> (Vec<agrega::Path>, Vec<agrega::Rgba8>) {
@@ -90,7 +90,7 @@ fn lion_cw() {
     mtx.translate(-g_base_dx, -g_base_dy);
     mtx.translate((w / 2) as f64, (h / 2) as f64);
     //mtx.translate(0.0, 0.0);
-    let t: Vec<_> = paths.into_iter().map(|p| agrega::ConvTransform::new(p, mtx.clone())).collect();
+    let t: Vec<Path> = paths.into_iter().map(|p| p.transformed(&mtx)).collect();
     println!("polygons: {}", t.len());
     agrega::render_all_paths(&mut ras, &mut ren, &t, &colors);
 

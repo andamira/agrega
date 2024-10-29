@@ -1,14 +1,14 @@
 use std::fs;
 
-use agrega::Render;
+use agrega::{Path, PathCommand, Render, RenderingBase, Rgba8, Transform};
 
-fn parse_lion() -> (Vec<agrega::Path>, Vec<agrega::Rgba8>) {
+fn parse_lion() -> (Vec<Path>, Vec<Rgba8>) {
     let txt = fs::read_to_string("tests/std/assets/lion.txt").unwrap();
     let mut paths = vec![];
     let mut colors = vec![];
-    let mut path = agrega::Path::new();
-    let mut color = agrega::Rgba8::black();
-    let mut cmd = agrega::PathCommand::Stop;
+    let mut path = Path::new();
+    let mut color = Rgba8::black();
+    let mut cmd = PathCommand::Stop;
 
     for line in txt.lines() {
         let v: Vec<_> = line.split_whitespace().collect();
@@ -23,20 +23,20 @@ fn parse_lion() -> (Vec<agrega::Path>, Vec<agrega::Rgba8>) {
                 paths.push(path);
                 colors.push(color);
             }
-            path = agrega::Path::new();
-            color = agrega::Rgba8::new(r, g, b, 255);
+            path = Path::new();
+            color = Rgba8::new(r, g, b, 255);
         } else {
             for val in v {
                 if val == "M" {
-                    cmd = agrega::PathCommand::MoveTo;
+                    cmd = PathCommand::MoveTo;
                 } else if val == "L" {
-                    cmd = agrega::PathCommand::LineTo;
+                    cmd = PathCommand::LineTo;
                 } else {
                     let pts: Vec<_> = val.split(",").map(|x| x.parse::<f64>().unwrap()).collect();
 
                     match cmd {
-                        agrega::PathCommand::LineTo => path.line_to(pts[0], pts[1]),
-                        agrega::PathCommand::MoveTo => {
+                        PathCommand::LineTo => path.line_to(pts[0], pts[1]),
+                        PathCommand::MoveTo => {
                             path.close_polygon();
                             path.move_to(pts[0], pts[1]);
                         }
@@ -61,10 +61,10 @@ fn lion_png() {
 
     let (paths, colors) = parse_lion();
     let pixf = agrega::Pixfmt::<agrega::Rgb8>::new(w, h);
-    let mut ren_base = agrega::RenderingBase::new(pixf);
-    ren_base.clear(agrega::Rgba8::new(255, 255, 255, 255));
+    let mut ren_base = RenderingBase::new(pixf);
+    ren_base.clear(Rgba8::new(255, 255, 255, 255));
     let mut ren = agrega::RenderingScanlineBinSolid::with_base(&mut ren_base);
-    ren.color(agrega::Rgba8::new(255, 0, 0, 255));
+    ren.color(Rgba8::new(255, 0, 0, 255));
 
     let mut ras = agrega::RasterizerScanline::new();
 
@@ -80,12 +80,11 @@ fn lion_png() {
     }
     let g_base_dx = (r.x2() - r.x1()) / 2.0;
     let g_base_dy = (r.y2() - r.y1()) / 2.0;
-    let mut mtx = agrega::Transform::new();
 
+    let mut mtx = Transform::new();
     mtx.translate(-g_base_dx, -g_base_dy);
     mtx.translate((w / 2) as f64, (h / 2) as f64);
-
-    let t: Vec<_> = paths.into_iter().map(|p| agrega::ConvTransform::new(p, mtx.clone())).collect();
+    let t: Vec<Path> = paths.into_iter().map(|p| p.transformed(&mtx)).collect();
 
     agrega::render_all_paths(&mut ras, &mut ren, &t, &colors);
 

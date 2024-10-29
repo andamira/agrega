@@ -1,4 +1,4 @@
-use agrega::Render;
+use agrega::{Path, Render, Transform};
 
 use std::fs;
 
@@ -90,13 +90,13 @@ fn lion_outline() {
     //eprintln!("dx,dy: {:?}", r);
     let g_base_dx = (r.x2() - r.x1()) / 2.0;
     let g_base_dy = (r.y2() - r.y1()) / 2.0;
-    let mut mtx = agrega::Transform::new();
+    let mut mtx = Transform::new();
     eprintln!("dx,dy: {} {}", -g_base_dx, -g_base_dy);
     eprintln!("dx,dy: {} {}", (w / 2) as f64, (h / 2) as f64);
     mtx.translate(-g_base_dx, -g_base_dy);
     mtx.translate((w / 2) as f64, (h / 2) as f64);
     //mtx.translate(0.0, 0.0);
-    let t: Vec<_> = paths.into_iter().map(|p| agrega::ConvTransform::new(p, mtx.clone())).collect();
+    let t: Vec<Path> = paths.into_iter().map(|p| p.transformed(&mtx)).collect();
     println!("polygons: {}", t.len());
 
     let mut stroke: Vec<_> = t.into_iter().map(|p| agrega::Stroke::new(p)).collect();
