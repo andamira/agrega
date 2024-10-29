@@ -205,6 +205,7 @@ impl Source for Pixfmt<Rgba32> {
     }
 }
 
+// common methods for multiple implementations
 macro_rules! impl_pixel {
     () => {
         /// Height of rendering buffer in pixels
@@ -224,6 +225,7 @@ macro_rules! impl_pixel {
 
 impl Pixel for Pixfmt<Rgba8> {
     impl_pixel!();
+
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, c: C) {
         let bpp = Self::bpp();
         let c = Rgba8::from_trait(c).into_array();
@@ -256,7 +258,6 @@ impl Pixel for Pixfmt<Rgba8> {
     ///
     /// # Output
     ///   - lerp(pixel(x,y), color, cover * alpha(color))
-    ///
     fn blend_pix<C: Color>(&mut self, id: (usize, usize), c: C, cover: u64) {
         let alpha = multiply_u8(c.alpha8(), cover as u8);
         let pix0 = self.get(id); // Rgba8
@@ -295,6 +296,7 @@ impl Pixel for Pixfmt<Rgba8> {
 
 impl Pixel for Pixfmt<Rgb8> {
     impl_pixel!();
+
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, c: C) {
         let bpp = Self::bpp();
         let c = Rgb8::from_trait(c).into_array();
@@ -348,6 +350,7 @@ impl Pixel for Pixfmt<Rgb8> {
         )
     }
 }
+
 impl Pixfmt<Gray8> {
     fn mix_pix(&mut self, id: (usize, usize), c: Gray8, alpha: u8) -> Gray8 {
         let p = Gray8::from_slice(&self.rbuf[id]);
@@ -384,8 +387,10 @@ impl Pixfmt<Rgba8> {
         self.set(id, pix);
     }
 }
+
 impl Pixel for Pixfmt<Rgba8pre> {
     impl_pixel!();
+
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, c: C) {
         let bpp = Self::bpp();
         let c = Rgba8pre::from_trait(c).into_array();
@@ -448,6 +453,7 @@ impl Pixfmt<Rgb8> {
         let p = &self.rbuf[id];
         Rgb8::new(p[0], p[1], p[2])
     }
+
     /// Compute **over** operator
     ///
     /// # Arguments
@@ -467,6 +473,7 @@ impl Pixfmt<Rgb8> {
         Rgb8::new(red, green, blue)
     }
 }
+
 impl Pixfmt<Rgba8pre> {
     /// Compute **over** operator
     ///
@@ -508,6 +515,7 @@ impl Pixfmt<Rgba8pre> {
 
 impl Pixel for Pixfmt<Rgba32> {
     impl_pixel!();
+
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, c: C) {
         for i in 0..n {
             self.set((id.0 + i, id.1), c);
@@ -558,6 +566,7 @@ impl Pixel for Pixfmt<Rgba32> {
 
 impl Pixel for Pixfmt<Gray8> {
     impl_pixel!();
+
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, color: C) {
         let bpp = Self::bpp();
         let c = Gray8::from_trait(color).into_array();

@@ -1,3 +1,5 @@
+// agrega::cell
+//
 //! Rendering Cells
 
 use crate::util::*;
@@ -7,7 +9,7 @@ use core::cmp::{max, min};
 /// Rendering Cell
 ///
 /// Effectively Represents a Pixel
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct Cell {
     // cell_aa
     /// Cell x position
@@ -21,14 +23,18 @@ pub(crate) struct Cell {
 }
 
 impl Cell {
-    /// Create a new Cell
+    /// Create a new Cell.
     ///
-    /// Cover and Area are both 0
+    /// `cover` and `area` are both 0.
+    #[inline]
+    #[must_use]
     const fn new() -> Self {
         Cell { x: i64::MAX, y: i64::MAX, cover: 0, area: 0 }
     }
 
-    /// Create new cell at position (x,y)
+    /// Create new cell at position (x,y).
+    #[inline]
+    #[must_use]
     pub const fn at(x: i64, y: i64) -> Self {
         let mut c = Cell::new();
         c.x = x;
@@ -36,8 +42,10 @@ impl Cell {
         c
     }
 
-    /// Compare two cell positionsx
-    pub fn equal(&self, x: i64, y: i64) -> bool {
+    /// Compares two cell positions for equality.
+    #[inline]
+    #[must_use]
+    pub const fn equal(&self, x: i64, y: i64) -> bool {
         self.x - x == 0 && self.y - y == 0
     }
 
@@ -123,8 +131,8 @@ impl RasterizerCell {
     //pub fn add_curr_cell(&mut self, new_cell: Cell) {
     //    self.cells.push( new_cell );
     //}
-    /// Determine if the last cell is equal to (x,y) and is empty
-    ///
+    // /// Determine if the last cell is equal to (x,y) and is empty
+    // ///
     // fn curr_cell_is_set(&self, x: i64, y: i64) -> bool {
     //     match self.cells.last() {
     //         None      => true,
@@ -152,7 +160,7 @@ impl RasterizerCell {
           //  self.show_last_cell();
           //}
     }
-    /// Print the last cell
+    // /// Print the last cell
     // fn show_last_cell(&self) {
     //     if let Some(c) = self.cells.last() {
     //         println!("ADD_CURR_CELL: {} {} area {} cover {} len {}", c.x,c.y,c.area,c.cover, self.cells.len());

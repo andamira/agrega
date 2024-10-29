@@ -1,40 +1,53 @@
+// agrega::base
+//
 //! Rendering Base
 
-use crate::{color::*, Color, Pixel, Source};
+use crate::{Color, Pixel, Source};
 use core::cmp::{max, min};
 
 /// Rendering Base
-#[derive(Debug)]
+#[must_use]
+#[derive(Clone, Debug)]
 pub struct RenderingBase<T> {
     /// Pixel Format
     pub pixf: T,
 }
 
 impl<T: Pixel> RenderingBase<T> {
-    /// Create new Rendering Base from Pixel Format
-    pub fn new(pixf: T) -> RenderingBase<T> {
+    /// Creates new a new rendering base from the given pixel format.
+    #[inline]
+    pub const fn new(pixf: T) -> RenderingBase<T> {
         RenderingBase { pixf }
     }
+
     /// Returns the rendering base as a byte slice.
     pub fn as_bytes(&self) -> &[u8] {
         self.pixf.as_bytes()
     }
+
+    /// Writes the image to a file.
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     pub fn to_file<P: AsRef<std::path::Path>>(&self, filename: P) -> Result<(), image::ImageError> {
         self.pixf.to_file(filename)
     }
-    /// Set Image to a single color
-    pub fn clear(&mut self, color: Rgba8) {
+
+    /// Sets the image to a single color.
+    //
+    // MAYBE: IMPROVE:
+    #[inline]
+    pub fn clear<C: Color>(&mut self, color: C) {
         self.pixf.fill(color);
     }
-    /// Get Image size
+
+    /// Returns the image size limits.
     pub fn limits(&self) -> (i64, i64, i64, i64) {
         let w = self.pixf.width() as i64;
         let h = self.pixf.height() as i64;
         (0, w - 1, 0, h - 1)
     }
-    /// Blend a color along y-row from x1 to x2
+
+    /// Blends a color along y-row from x1 to x2.
     pub fn blend_hline<C: Color>(&mut self, x1: i64, y: i64, x2: i64, c: C, cover: u64) {
         let (xmin, xmax, ymin, ymax) = self.limits();
         let (x1, x2) = if x2 > x1 { (x1, x2) } else { (x2, x1) };
@@ -45,7 +58,8 @@ impl<T: Pixel> RenderingBase<T> {
         let x2 = min(x2, xmax);
         self.pixf.blend_hline(x1, y, x2 - x1 + 1, c, cover);
     }
-    /// Blend a color from (x,y) with variable covers
+
+    /// Blends a color from (x,y) with variable covers.
     pub fn blend_solid_hspan<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, covers: &[u64]) {
         let (xmin, xmax, ymin, ymax) = self.limits();
         if y > ymax || y < ymin {
@@ -70,7 +84,8 @@ impl<T: Pixel> RenderingBase<T> {
         assert!(len as usize <= covers[off as usize..].len());
         self.pixf.blend_solid_hspan(x, y, len, c, covers_win);
     }
-    /// Blend a color from (x,y) with variable covers
+
+    /// Blends a color from (x,y) with variable covers.
     pub fn blend_solid_vspan<C: Color>(&mut self, x: i64, y: i64, len: i64, c: C, covers: &[u64]) {
         let (xmin, xmax, ymin, ymax) = self.limits();
         if x > xmax || x < xmin {
@@ -96,7 +111,7 @@ impl<T: Pixel> RenderingBase<T> {
         self.pixf.blend_solid_vspan(x, y, len, c, covers_win);
     }
 
-    /// TODO
+    /// Blends colors (TODO):
     pub fn blend_color_vspan<C: Color>(
         &mut self,
         x: i64,
@@ -133,7 +148,8 @@ impl<T: Pixel> RenderingBase<T> {
         let colors_win = &colors[off as usize..(off + len) as usize];
         self.pixf.blend_color_vspan(x, y, len, colors_win, covers_win, cover);
     }
-    /// TODO
+
+    /// Blends colors (TODO):
     pub fn blend_color_hspan<C: Color>(
         &mut self,
         x: i64,
@@ -171,7 +187,7 @@ impl<T: Pixel> RenderingBase<T> {
         self.pixf.blend_color_hspan(x, y, len, colors_win, covers_win, cover);
     }
 
-    /// TODO
+    /// Blends from (TODO):
     pub fn blend_from<S: Pixel + Source>(&mut self, other: &S, opacity: f64) {
         if self.pixf.width() != other.width() || self.pixf.height() != other.height() {
             panic!("wrong size");

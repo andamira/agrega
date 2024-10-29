@@ -1,3 +1,5 @@
+// agrega::raster
+//
 //! Rasterizer
 
 use crate::{
@@ -9,29 +11,25 @@ use core::cmp::{max, min};
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
-struct RasConvInt {}
+struct RasConvInt;
 impl RasConvInt {
     pub fn upscale(v: f64) -> i64 {
         (v * POLY_SUBPIXEL_SCALE as f64).round() as i64
     }
-    //pub fn downscale(v: i64) -> i64 {
-    //    v
-    //}
 }
 
-/// Winding / Filling Rule
-///
-/// See [Non-Zero Filling Rule](https://en.wikipedia.org/wiki/Nonzero-rule) and
-/// [Even-Odd Filling](https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule)
-#[derive(Debug, Default, PartialEq, Copy, Clone)]
+/// Winding / Filling Rule.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum FillingRule {
+    /// [Non-Zero Filling Rule](https://en.wikipedia.org/wiki/Nonzero-rule).
     #[default]
     NonZero,
+    /// [Even-Odd Filling Rule](https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule).
     EvenOdd,
 }
 
-/// Path Status
-#[derive(Debug, Default, PartialEq, Copy, Clone)]
+/// Path Status.
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum PathStatus {
     #[default]
     Initial,
@@ -45,14 +43,15 @@ pub enum PathStatus {
 pub struct RasterizerScanline {
     /// Clipping Region
     pub(crate) clipper: Clip,
-    /// Collection of Rasterizing Cells
-    outline: RasterizerCell,
     /// Status of Path
     pub(crate) status: PathStatus,
     /// Current x position
     pub(crate) x0: i64,
     /// Current y position
     pub(crate) y0: i64,
+
+    /// Collection of Rasterizing Cells
+    outline: RasterizerCell,
     /// Current y row being worked on, for output
     scan_y: i64,
     /// Filling Rule for Polygons
@@ -68,9 +67,37 @@ impl Default for RasterizerScanline {
 }
 
 impl RasterizerScanline {
-    /// Reset Rasterizer
+    /// Creates a new `RasterizerScanline`.
+    pub fn new() -> Self {
+        Self {
+            clipper: Clip::new(),
+            status: PathStatus::Initial,
+            outline: RasterizerCell::new(),
+            x0: 0,
+            y0: 0,
+            scan_y: 0,
+            filling_rule: FillingRule::NonZero,
+            gamma: (0..256).collect(),
+        }
+    }
+
+    /// Create a new `RasterizerScanline` with a gamma function
+    ///
+    /// See [`gamma`][Self::gamma] for description.
+    #[inline]
+    #[must_use]
+    pub fn with_gamma<F: Fn(f64) -> f64>(gfunc: F) -> Self {
+        let mut new = Self::new();
+        new.gamma(gfunc);
+        new
+    }
+
+    /* */
+
+    /// Resets the rasterizer.
     ///
     /// Reset the RasterizerCell and set PathStatus to Initial
+    #[inline]
     pub fn reset(&mut self) {
         self.outline.reset();
         self.status = PathStatus::Initial;
@@ -93,7 +120,9 @@ impl RasterizerScanline {
             }
         }
     }
-    /// Set Filling Rule
+
+    /// Sets the filling rule.
+    #[inline]
     pub fn set_filling_rule(&mut self, filling_rule: FillingRule) {
         self.filling_rule = filling_rule;
     }
@@ -179,39 +208,28 @@ impl RasterizerScanline {
         true
     }
 
-    /// Return minimum x value from the RasterizerCell
+    /// Return minimum x value from the `RasterizerCell`.
+    #[inline]
+    #[must_use]
     pub fn min_x(&self) -> i64 {
         self.outline.min_x
     }
-    /// Return maximum x value from the RasterizerCell
+
+    /// Return maximum x value from the `RasterizerCell`.
+    #[inline]
+    #[must_use]
     pub fn max_x(&self) -> i64 {
         self.outline.max_x
     }
 
-    /// Create a new RasterizerScanline
-    pub fn new() -> Self {
-        Self {
-            clipper: Clip::new(),
-            status: PathStatus::Initial,
-            outline: RasterizerCell::new(),
-            x0: 0,
-            y0: 0,
-            scan_y: 0,
-            filling_rule: FillingRule::NonZero,
-            gamma: (0..256).collect(),
-        }
-    }
-    /// Set the gamma function
+    /// Sets the gamma function
     ///
     /// Values are set as:
-    ///```ignore
-    ///      gamma = gfunc( v / mask ) * mask
-    ///```
+    /// ```txt
+    /// gamma = gfunc( v / mask ) * mask
     /// where v = 0 to 255
-    pub fn gamma<F>(&mut self, gfunc: F)
-    where
-        F: Fn(f64) -> f64,
-    {
+    /// ```
+    pub fn gamma<F: Fn(f64) -> f64>(&mut self, gfunc: F) {
         let aa_shift = 8;
         let aa_scale = 1 << aa_shift;
         let aa_mask = f64::from(aa_scale - 1);
@@ -220,19 +238,6 @@ impl RasterizerScanline {
             .map(|i| gfunc(f64::from(i) / aa_mask))
             .map(|v| (v * aa_mask).round() as u64)
             .collect();
-    }
-
-    /// Create a new RasterizerScanline with a gamma function
-    ///
-    /// See gamma() function for description
-    ///
-    pub fn new_with_gamma<F>(gfunc: F) -> Self
-    where
-        F: Fn(f64) -> f64,
-    {
-        let mut new = Self::new();
-        new.gamma(gfunc);
-        new
     }
 
     /// Set Clip Box
@@ -245,7 +250,7 @@ impl RasterizerScanline {
         );
     }
 
-    /// Move to point (x,y)
+    /// Moves to point (x,y).
     ///
     /// Sets point as the initial point.
     pub fn move_to(&mut self, x: f64, y: f64) {
@@ -255,7 +260,7 @@ impl RasterizerScanline {
         self.status = PathStatus::MoveTo;
     }
 
-    /// Draw a line from previous point to new point (x,y)
+    /// Draws a line from previous point to new point (x,y).
     pub fn line_to(&mut self, x: f64, y: f64) {
         let x = RasConvInt::upscale(x);
         let y = RasConvInt::upscale(y);
@@ -263,7 +268,7 @@ impl RasterizerScanline {
         self.status = PathStatus::LineTo;
     }
 
-    /// Close the current polygon
+    /// Closes the current polygon.
     ///
     /// Draw a line from current point to initial "move to" point
     pub fn close_polygon(&mut self) {
@@ -273,9 +278,8 @@ impl RasterizerScanline {
         }
     }
 
-    /// Calculate alpha term based on area
-    ///
-    ///
+    /// Calculates alpha term based on area.
+    #[must_use]
     fn calculate_alpha(&self, area: i64) -> u64 {
         let aa_shift = 8;
         let aa_scale = 1 << aa_shift;
@@ -296,15 +300,19 @@ impl RasterizerScanline {
     }
 }
 
+/// TODO
 pub(crate) fn len_i64(a: &Vertex<i64>, b: &Vertex<i64>) -> i64 {
     len_i64_xy(a.x, a.y, b.x, b.y)
 }
+
+/// TODO
 pub(crate) fn len_i64_xy(x1: i64, y1: i64, x2: i64, y2: i64) -> i64 {
     let dx = x1 as f64 - x2 as f64;
     let dy = y1 as f64 - y2 as f64;
     (dx * dx + dy * dy).sqrt().round() as i64
 }
 
+// /// MAYBE
 // #[derive(Debug,PartialEq,Copy,Clone)]
 // pub enum LineJoin {
 //     Round,
