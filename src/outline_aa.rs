@@ -588,7 +588,7 @@ where
         xh2: i64,
     ) {
         if let Some(clip_box) = self.clip_box {
-            if clip_box.clip_flags(xc, yc) != 0 {
+            if clip_box.clip_flags_i64(xc, yc) != 0 {
                 return;
             }
         }
@@ -688,7 +688,7 @@ where
         F: Fn(i64) -> bool,
     {
         if let Some(clip_box) = self.clip_box {
-            if clip_box.clip_flags(xc1, yc1) != 0 {
+            if clip_box.clip_flags_i64(xc1, yc1) != 0 {
                 return;
             }
         }

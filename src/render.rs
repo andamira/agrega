@@ -593,8 +593,8 @@ pub(crate) fn clip_line_segment(
     y2: i64,
     clip_box: Rectangle<i64>,
 ) -> (i64, i64, i64, i64, u8) {
-    let f1 = clip_box.clip_flags(x1, y1);
-    let f2 = clip_box.clip_flags(x2, y2);
+    let f1 = clip_box.clip_flags_i64(x1, y1);
+    let f2 = clip_box.clip_flags_i64(x2, y2);
     let mut ret = 0;
     if f1 == ClipSide::INSIDE && f2 == ClipSide::INSIDE {
         return (x1, y1, x2, y2, 0);
@@ -660,7 +660,7 @@ fn clip_move_point(
             y = ((x - x1) as f64 * (y2 - y1) as f64 / (x2 - x1) as f64 + y1 as f64) as i64;
         }
     }
-    let flags = clip_box.clip_flags(x, y);
+    let flags = clip_box.clip_flags_i64(x, y);
     if flags & (ClipSide::TOP | ClipSide::BOTTOM) != 0 {
         if y1 == y2 {
             return None;
