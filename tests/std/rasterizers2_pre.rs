@@ -1,86 +1,12 @@
 #![cfg_attr(not(feature = "freetype"), allow(unused))]
 
-use super::text_h8_sw07 as text;
+use super::{text_h8_sw07 as text, Roundoff, Spiral};
 use agrega::{
     img_diff, render_scanlines, DrawOutline, LineImagePatternPow2, PatternFilterBilinear, Pixel,
     Pixfmt, RasterizerOutline, RasterizerOutlineAA, RasterizerScanline, Render, RendererOutline,
     RendererOutlineAA, RendererOutlineImg, RenderingBase, RenderingScanlineAASolid, Rgb8, Rgba32,
-    Rgba8pre, Srgba8, Stroke, Vertex, VertexSource,
+    Rgba8pre, Srgba8, Stroke,
 };
-
-pub struct Roundoff<T: VertexSource> {
-    pub src: T,
-}
-
-impl<T> Roundoff<T>
-where
-    T: VertexSource,
-{
-    fn new(src: T) -> Self {
-        Self { src }
-    }
-}
-
-impl<T> VertexSource for Roundoff<T>
-where
-    T: VertexSource,
-{
-    fn xconvert(&self) -> Vec<Vertex<f64>> {
-        self.src
-            .xconvert()
-            .into_iter()
-            .map(|v| Vertex::new(v.x.floor(), v.y.floor(), v.cmd))
-            .collect()
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Spiral {
-    x: f64,
-    y: f64,
-    r1: f64,
-    r2: f64,
-    #[allow(dead_code)]
-    step: f64,
-    start_angle: f64,
-    da: f64,
-    dr: f64,
-}
-
-impl VertexSource for Spiral {
-    fn xconvert(&self) -> Vec<Vertex<f64>> {
-        self.spin_spin_spin()
-    }
-}
-
-impl Spiral {
-    pub fn new(x: f64, y: f64, r1: f64, r2: f64, step: f64, start_angle: f64) -> Self {
-        let da = 8.0f64.to_radians();
-        let dr = step / 45.0;
-        Self { x, y, r1, r2, step, start_angle, da, dr }
-    }
-    pub fn spin_spin_spin(&self) -> Vec<Vertex<f64>> {
-        let mut out = vec![];
-        //let mut i = 0;
-        let mut r = self.r1;
-        let mut angle = self.start_angle;
-        while r <= self.r2 {
-            let x = self.x + angle.cos() * r;
-            let y = self.y + angle.sin() * r;
-            if out.is_empty() {
-                out.push(Vertex::move_to(x, y));
-            } else {
-                out.push(Vertex::line_to(x, y));
-            }
-            //i += 1;
-            r += self.dr;
-            angle += self.da;
-            //r = self.r1 + i as f64 * self.dr;
-            //angle = self.start_angle + i as f64 * self.da;
-        }
-        out
-    }
-}
 
 fn chain() -> Pixfmt<Rgba32> {
     let width = 16;
@@ -104,7 +30,6 @@ fn chain() -> Pixfmt<Rgba32> {
         0x00ffffff, 0x00ffffff, 0xb4c29999, 0xff9a5757, 0xff9a5757, 0xff9a5757, 0xff9a5757,
         0xff9a5757, 0xff9a5757, 0xb4c29999, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff,
     ];
-
     let mut colors = vec![];
     for v in raw.iter() {
         let r = ((v >> 16) & 0x0000_00ff_u32) as u8;
@@ -125,7 +50,6 @@ fn chain() -> Pixfmt<Rgba32> {
 }
 
 #[test]
-#[cfg(feature = "freetype")]
 fn rasterizers2_pre() {
     let (w, h) = (500, 450);
 
@@ -239,7 +163,7 @@ fn rasterizers2_pre() {
         );
     }
 
-    // Revove alpha channel from data
+    // Remove alpha channel from data
     let data = ren_base.as_bytes();
     let mut out = vec![];
     #[allow(clippy::needless_range_loop)]

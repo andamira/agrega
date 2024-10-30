@@ -1,6 +1,6 @@
 use agrega::{
-    render_scanlines, Pixfmt, RasterizerScanline, Render, RenderingBase, RenderingScanlineAASolid,
-    Rgb8, Rgba8, img_diff,
+    img_diff, render_scanlines, Pixfmt, RasterizerScanline, Render, RenderingBase,
+    RenderingScanlineAASolid, Rgb8, Rgba8,
 };
 
 #[test]

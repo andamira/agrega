@@ -1,5 +1,5 @@
-mod _utils;
-use _utils::*;
+mod _common;
+use _common::*;
 
 mod aa_test;
 mod component_rendering_000;
@@ -16,7 +16,7 @@ mod outline;
 mod outline_aa;
 mod rasterizers;
 mod rasterizers2;
-mod rasterizers2_pre; // can use freetype
+mod rasterizers2_pre;
 mod rasterizers_gamma;
 mod rounded_rect;
 mod t00_example;

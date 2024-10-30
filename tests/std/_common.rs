@@ -1,8 +1,17 @@
+// agrega::tests::std::utils
+//
+// TOC
+// - text functions
+// - spiral-related items
+// - parse lion functions
+
 use agrega::{
     render_scanlines, GsvText, Path, PathCommand, PathOrientation, Pixel, RasterizerScanline,
-    Render, RenderingScanlineAASolid, Rgb8, Srgba8, Stroke,
+    Render, RenderingScanlineAASolid, Rgb8, Srgba8, Stroke, Vertex, VertexSource,
 };
 use std::fs;
+
+/* text functions */
 
 /// 8 height text, 0.7 stroke_width
 #[inline] #[rustfmt::skip]
@@ -35,6 +44,74 @@ pub(super) fn text<T: Pixel>(
     ren.color(Rgb8::black());
     render_scanlines(ras, ren);
 }
+
+/* spiral-related items */
+
+pub struct Roundoff<T: VertexSource> {
+    pub src: T,
+}
+impl<T: VertexSource> Roundoff<T> {
+    pub fn new(src: T) -> Self {
+        Self { src }
+    }
+}
+impl<T: VertexSource> VertexSource for Roundoff<T> {
+    fn xconvert(&self) -> Vec<Vertex<f64>> {
+        self.src
+            .xconvert()
+            .into_iter()
+            .map(|v| Vertex::new(v.x.floor(), v.y.floor(), v.cmd))
+            .collect()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Spiral {
+    x: f64,
+    y: f64,
+    r1: f64,
+    r2: f64,
+    #[allow(dead_code)]
+    step: f64,
+    start_angle: f64,
+    da: f64,
+    dr: f64,
+}
+impl VertexSource for Spiral {
+    fn xconvert(&self) -> Vec<Vertex<f64>> {
+        self.spin_spin_spin()
+    }
+}
+impl Spiral {
+    pub fn new(x: f64, y: f64, r1: f64, r2: f64, step: f64, start_angle: f64) -> Self {
+        let da = 8.0f64.to_radians();
+        let dr = step / 45.0;
+        Self { x, y, r1, r2, step, start_angle, da, dr }
+    }
+    pub fn spin_spin_spin(&self) -> Vec<Vertex<f64>> {
+        let mut out = vec![];
+        //let mut i = 0;
+        let mut r = self.r1;
+        let mut angle = self.start_angle;
+        while r <= self.r2 {
+            let x = self.x + angle.cos() * r;
+            let y = self.y + angle.sin() * r;
+            if out.is_empty() {
+                out.push(Vertex::move_to(x, y));
+            } else {
+                out.push(Vertex::line_to(x, y));
+            }
+            //i += 1;
+            r += self.dr;
+            angle += self.da;
+            //r = self.r1 + i as f64 * self.dr;
+            //angle = self.start_angle + i as f64 * self.da;
+        }
+        out
+    }
+}
+
+/* parse lion functions */
 
 #[inline]
 pub(super) fn parse_lion_reoriented() -> (Vec<Path>, Vec<Rgb8>) {
