@@ -101,7 +101,7 @@ impl GsvText {
 }
 
 impl VertexSource for GsvText {
-    fn rewind(&self) {}
+    // fn rewind(&self) {}
     fn xconvert(&self) -> Vec<Vertex<f64>> {
         let mut out = vec![];
         let mut chars = self.text.char_indices();

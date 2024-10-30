@@ -6,20 +6,14 @@ use core::marker::PhantomData;
 use std::path::Path;
 
 /// TODO
-pub struct PixfmtAlphaBlend<'a, T, C>
-where
-    T: Pixel,
-{
+pub struct PixfmtAlphaBlend<'a, T: Pixel, C> {
     ren: &'a mut RenderingBase<T>,
     offset: usize,
     //step: usize,
     phantom: PhantomData<C>,
 }
 
-impl<'a, T, C> PixfmtAlphaBlend<'a, T, C>
-where
-    T: Pixel,
-{
+impl<'a, T: Pixel, C> PixfmtAlphaBlend<'a, T, C> {
     pub fn new(ren: &'a mut RenderingBase<T>, offset: usize) -> Self {
         //let step = T::bpp();
         Self { ren, offset, phantom: PhantomData }

@@ -2,7 +2,7 @@
 //
 //! Rendering Base
 
-use crate::{Color, Pixel, Source};
+use crate::{Color, Pixel, PixelSource};
 use core::cmp::{max, min};
 
 /// Rendering Base
@@ -188,7 +188,7 @@ impl<T: Pixel> RenderingBase<T> {
     }
 
     /// Blends from (TODO):
-    pub fn blend_from<S: Pixel + Source>(&mut self, other: &S, opacity: f64) {
+    pub fn blend_from<S: Pixel + PixelSource>(&mut self, other: &S, opacity: f64) {
         if self.pixf.width() != other.width() || self.pixf.height() != other.height() {
             panic!("wrong size");
         }

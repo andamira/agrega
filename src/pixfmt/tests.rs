@@ -1,4 +1,4 @@
-use crate::{Pixel, Pixfmt, Rgb8, Rgba32, Rgba8, Rgba8pre, Source, Srgba8};
+use crate::{Pixel, PixelSource, Pixfmt, Rgb8, Rgba32, Rgba8, Rgba8pre, Srgba8};
 
 #[test]
 fn pixfmt_test() {

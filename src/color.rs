@@ -29,7 +29,7 @@ fn rgb_to_srgb(x: f64) -> f64 {
 
 // Converts a `u8` color component to `f64` in the range [0.0, 1.0].
 #[inline] #[must_use] #[rustfmt::skip]
-fn color_u8_to_f64(x: u8) -> f64 { f64::from(x) / 255.0 }
+pub(crate) fn color_u8_to_f64(x: u8) -> f64 { f64::from(x) / 255.0 }
 
 // Computes the luminance of an RGB color in `u8` and returns it as `u8`.
 #[inline] #[must_use] #[rustfmt::skip]
@@ -93,91 +93,6 @@ pub trait Color: core::fmt::Debug + Copy {
     }
     /// Return if the color has been premultiplied
     fn is_premultiplied(&self) -> bool;
-}
-
-/// Represents a color with Red, Green, Blue, and Alpha (`u8` values).
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct Rgba8 {
-    /// Red channel (0-255).
-    pub r: u8,
-    /// Green channel (0-255).
-    pub g: u8,
-    /// Blue channel (0-255).
-    pub b: u8,
-    /// Alpha channel (0-255).
-    pub a: u8,
-}
-
-impl Rgba8 {
-    /// Creates a new `Rgba8` color from red, green, blue, and alpha components.
-    #[inline]
-    #[must_use]
-    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
-        Rgba8 { r, g, b, a }
-    }
-    /// Constructs `Rgba8` from any type implementing `Color` trait.
-    #[inline]
-    #[must_use]
-    pub fn from_trait<C: Color>(c: C) -> Self {
-        Self::new(c.red8(), c.green8(), c.blue8(), c.alpha8())
-    }
-    /// Creates a color from a wavelength and gamma correction factor.
-    #[inline]
-    #[must_use]
-    pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
-        let c = Rgb8::from_wavelength_gamma(w, gamma);
-        Self::from_trait(c) // IMPROVE
-    }
-
-    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
-    #[inline]
-    pub const fn from_array(v: [u8; 4]) -> Self {
-        Self::new(v[0], v[1], v[2], v[3])
-    }
-
-    /// Returns pure white (`255, 255, 255, 255`).
-    #[inline]
-    #[must_use]
-    pub const fn white() -> Self {
-        Self::new(255, 255, 255, 255)
-    }
-    /// Returns pure black (`0, 0, 0, 255`).
-    #[inline]
-    #[must_use]
-    pub const fn black() -> Self {
-        Self::new(0, 0, 0, 255)
-    }
-
-    /// Returns the color premultiplied by its alpha.
-    #[must_use]
-    pub const fn premultiply(self) -> Rgba8pre {
-        match self.a {
-            255 => Rgba8pre::new(self.r, self.g, self.b, self.a),
-            0 => Rgba8pre::new(0, 0, 0, self.a),
-            _ => {
-                let r = multiply_u8(self.r, self.a);
-                let g = multiply_u8(self.g, self.a);
-                let b = multiply_u8(self.b, self.a);
-                Rgba8pre::new(r, g, b, self.a)
-            }
-        }
-    }
-
-    /// Sets the color to fully transparent black (`0, 0, 0, 0`).
-    #[inline]
-    pub fn clear(&mut self) {
-        self.r = 0;
-        self.g = 0;
-        self.b = 0;
-        self.a = 0;
-    }
-
-    /// Returns the color components as an array `[r, g, b, a]`.
-    #[inline]
-    #[must_use]
-    pub const fn into_array(&self) -> [u8; 4] {
-        [self.r, self.g, self.b, self.a]
-    }
 }
 
 /// Grayscale color with optional transparency.
@@ -335,6 +250,91 @@ impl Rgb8 {
     #[must_use]
     pub const fn into_array(&self) -> [u8; 3] {
         [self.r, self.g, self.b]
+    }
+}
+
+/// Represents a color with Red, Green, Blue, and Alpha (`u8` values).
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct Rgba8 {
+    /// Red channel (0-255).
+    pub r: u8,
+    /// Green channel (0-255).
+    pub g: u8,
+    /// Blue channel (0-255).
+    pub b: u8,
+    /// Alpha channel (0-255).
+    pub a: u8,
+}
+
+impl Rgba8 {
+    /// Creates a new `Rgba8` color from red, green, blue, and alpha components.
+    #[inline]
+    #[must_use]
+    pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
+        Rgba8 { r, g, b, a }
+    }
+    /// Constructs `Rgba8` from any type implementing `Color` trait.
+    #[inline]
+    #[must_use]
+    pub fn from_trait<C: Color>(c: C) -> Self {
+        Self::new(c.red8(), c.green8(), c.blue8(), c.alpha8())
+    }
+    /// Creates a color from a wavelength and gamma correction factor.
+    #[inline]
+    #[must_use]
+    pub fn from_wavelength_gamma(w: f64, gamma: f64) -> Self {
+        let c = Rgb8::from_wavelength_gamma(w, gamma);
+        Self::from_trait(c) // IMPROVE
+    }
+
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
+    #[inline]
+    pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+
+    /// Returns pure white (`255, 255, 255, 255`).
+    #[inline]
+    #[must_use]
+    pub const fn white() -> Self {
+        Self::new(255, 255, 255, 255)
+    }
+    /// Returns pure black (`0, 0, 0, 255`).
+    #[inline]
+    #[must_use]
+    pub const fn black() -> Self {
+        Self::new(0, 0, 0, 255)
+    }
+
+    /// Returns the color premultiplied by its alpha.
+    #[must_use]
+    pub const fn premultiply(self) -> Rgba8pre {
+        match self.a {
+            255 => Rgba8pre::new(self.r, self.g, self.b, self.a),
+            0 => Rgba8pre::new(0, 0, 0, self.a),
+            _ => {
+                let r = multiply_u8(self.r, self.a);
+                let g = multiply_u8(self.g, self.a);
+                let b = multiply_u8(self.b, self.a);
+                Rgba8pre::new(r, g, b, self.a)
+            }
+        }
+    }
+
+    /// Sets the color to fully transparent black (`0, 0, 0, 0`).
+    #[inline]
+    pub fn clear(&mut self) {
+        self.r = 0;
+        self.g = 0;
+        self.b = 0;
+        self.a = 0;
+    }
+
+    /// Returns the color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array(&self) -> [u8; 4] {
+        [self.r, self.g, self.b, self.a]
     }
 }
 

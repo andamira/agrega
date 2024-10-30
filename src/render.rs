@@ -9,7 +9,7 @@ use crate::{
     pixfmt::Pixfmt,
     raster::{len_i64_xy, RasterizerScanline},
     scan::ScanlineU8,
-    Color, DrawOutline, Pixel, Render, Rgb8, Source, Transform, VertexSource, MAX_HALF_WIDTH,
+    Color, DrawOutline, Pixel, Render, Rgb8, PixelSource, Transform, VertexSource, MAX_HALF_WIDTH,
     POLY_MR_SUBPIXEL_SHIFT, POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
@@ -843,10 +843,7 @@ impl LineImagePattern {
             pix: Pixfmt::new(1, 1),
         }
     }
-    pub fn create<T>(&mut self, src: &T)
-    where
-        T: Source + Pixel,
-    {
+    pub fn create<T: PixelSource + Pixel>(&mut self, src: &T) {
         self.height = src.height() as u64;
         self.width = src.width() as u64;
         self.width_hr = src.width() as i64 * POLY_SUBPIXEL_SCALE;
@@ -927,10 +924,7 @@ impl LineImagePatternPow2 {
         let base = LineImagePattern::new(filter);
         Self { base, mask: POLY_SUBPIXEL_MASK as u64 }
     }
-    pub fn create<T>(&mut self, src: &T)
-    where
-        T: Source + Pixel,
-    {
+    pub fn create<T: PixelSource + Pixel>(&mut self, src: &T) {
         self.base.create(src);
         self.mask = 1;
         while self.mask < self.base.width {

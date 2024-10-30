@@ -4,13 +4,13 @@ use crate::{
     color::{Gray8, Rgb8, Rgba8},
     pixfmt::Pixfmt,
     util::{lerp_u8, multiply_u8},
-    Color, Pixel, Source,
+    Color, Pixel, PixelSource,
 };
 
 /// Alpha Mask Adaptor
 pub struct AlphaMaskAdaptor<T>
 where
-    Pixfmt<T>: Pixel + Source,
+    Pixfmt<T>: Pixel + PixelSource,
 {
     pub rgb: Pixfmt<T>,
     pub alpha: Pixfmt<Gray8>,
@@ -18,7 +18,7 @@ where
 
 impl<T> AlphaMaskAdaptor<T>
 where
-    Pixfmt<T>: Pixel + Source,
+    Pixfmt<T>: Pixel + PixelSource,
 {
     /// Create a new Alpha Mask Adapator from a two PixelFormats
     pub fn new(rgb: Pixfmt<T>, alpha: Pixfmt<Gray8>) -> Self {
