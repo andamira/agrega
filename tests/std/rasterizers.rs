@@ -1,5 +1,5 @@
 use agrega::{
-    render_scanlines, Path, Pixfmt, RasterizerScanline, Render, RenderingBase,
+    img_diff, render_scanlines, Path, Pixfmt, RasterizerScanline, Render, RenderingBase,
     RenderingScanlineAASolid, RenderingScanlineBinSolid, Rgb8, Rgba8,
 };
 
@@ -21,7 +21,7 @@ fn rasterizers() {
 
     let pixf = Pixfmt::<Rgb8>::new(w, h);
     let mut ren_base = RenderingBase::new(pixf);
-    ren_base.clear(Rgba8::new(255, 255, 255, 255));
+    ren_base.clear(Rgb8::white());
 
     //let gamma = 1.0;
     let alpha = 0.5;
@@ -57,8 +57,5 @@ fn rasterizers() {
         render_scanlines(&mut ras, &mut ren_bin);
     }
     ren_base.to_file("tests/std/tmp/rasterizers.png").unwrap();
-    assert!(
-        agrega::ppm::img_diff("tests/std/tmp/rasterizers.png", "tests/images/rasterizers.png")
-            .unwrap()
-    );
+    assert!(img_diff("tests/std/tmp/rasterizers.png", "tests/images/rasterizers.png").unwrap());
 }

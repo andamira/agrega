@@ -24,6 +24,7 @@ fn test_di1() {
     d.inc_x(1);
     assert_eq!(d.dist, -17720);
 
+    #[allow(clippy::erasing_op, reason = "0 & !POLY_SUBPIXEL_MASK")]
     let mut d =
         DistanceInterpolator1::new(0, 0, 30, 0, 0 & !POLY_SUBPIXEL_MASK, 0 & !POLY_SUBPIXEL_MASK);
     assert_eq!(d.dx(), 7680); // 30 << 8

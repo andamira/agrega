@@ -1,4 +1,6 @@
-use agrega::{Label, Pixfmt, RenderingBase, Rgb8, Rgba8, XAlign, YAlign, _dep::freetype::Library};
+use agrega::{
+    Label, Pixfmt, RenderingBase, Rgb8, Rgba8, XAlign, YAlign, _dep::freetype::Library, draw_text,
+};
 
 #[test]
 fn t23_font() {
@@ -8,9 +10,9 @@ fn t23_font() {
 
     let pix = Pixfmt::<Rgb8>::new(100, 100);
     let mut ren_base = RenderingBase::new(pix);
-    ren_base.clear(Rgba8::new(255, 255, 255, 255));
+    ren_base.clear(Rgb8::white());
 
-    agrega::draw_text("Hello World!!!", 50, 45, Rgba8::new(0, 0, 0, 255), &font, &mut ren_base);
+    draw_text("Hello World!!!", 50, 45, Rgba8::black(), &font, &mut ren_base);
 
     let mut label = Label::new("Hello World!!!", 50., 58., 13.0, &font)
         .unwrap()
@@ -18,9 +20,9 @@ fn t23_font() {
         .yalign(YAlign::Center);
     label.draw_subpixel(&mut ren_base);
 
-    ren_base.blend_hline(50, 57, 50, Rgba8::new(255, 0, 0, 255), 255);
+    ren_base.blend_hline(50, 57, 50, Rgb8::new(255, 0, 0), 255);
 
     ren_base.to_file("tests/std/tmp/font.png").unwrap();
     // FIXME: images differ slightly, this font is rendered taller
-    // assert!(agrega::ppm::img_diff("tests/std/tmp/font.png", "tests/images/font.png").unwrap());
+    // assert!(img_diff("tests/std/tmp/font.png", "tests/images/font.png").unwrap());
 }

@@ -1,6 +1,12 @@
 #![cfg_attr(not(feature = "freetype"), allow(unused))]
 
-use agrega::{DrawOutline, Pixel, Render, VertexSource};
+use super::text_h8_sw07 as text;
+use agrega::{
+    img_diff, render_scanlines, DrawOutline, LineImagePatternPow2, PatternFilterBilinear, Pixel,
+    Pixfmt, RasterizerOutline, RasterizerOutlineAA, RasterizerScanline, Render, RendererOutlineAA,
+    RendererOutlineImg, RendererPrimitives, RenderingBase, RenderingScanlineAASolid, Rgb8, Rgba32,
+    Rgba8pre, Srgba8, Stroke, Vertex, VertexSource,
+};
 
 pub struct Roundoff<T: VertexSource> {
     pub src: T,
@@ -19,11 +25,11 @@ impl<T> VertexSource for Roundoff<T>
 where
     T: VertexSource,
 {
-    fn xconvert(&self) -> Vec<agrega::Vertex<f64>> {
+    fn xconvert(&self) -> Vec<Vertex<f64>> {
         self.src
             .xconvert()
             .into_iter()
-            .map(|v| agrega::Vertex::new(v.x.floor(), v.y.floor(), v.cmd))
+            .map(|v| Vertex::new(v.x.floor(), v.y.floor(), v.cmd))
             .collect()
     }
 }
@@ -42,7 +48,7 @@ pub struct Spiral {
 }
 
 impl VertexSource for Spiral {
-    fn xconvert(&self) -> Vec<agrega::Vertex<f64>> {
+    fn xconvert(&self) -> Vec<Vertex<f64>> {
         self.spin_spin_spin()
     }
 }
@@ -53,7 +59,7 @@ impl Spiral {
         let dr = step / 45.0;
         Self { x, y, r1, r2, step, start_angle, da, dr }
     }
-    pub fn spin_spin_spin(&self) -> Vec<agrega::Vertex<f64>> {
+    pub fn spin_spin_spin(&self) -> Vec<Vertex<f64>> {
         let mut out = vec![];
         //let mut i = 0;
         let mut r = self.r1;
@@ -62,9 +68,9 @@ impl Spiral {
             let x = self.x + angle.cos() * r;
             let y = self.y + angle.sin() * r;
             if out.is_empty() {
-                out.push(agrega::Vertex::move_to(x, y));
+                out.push(Vertex::move_to(x, y));
             } else {
-                out.push(agrega::Vertex::line_to(x, y));
+                out.push(Vertex::line_to(x, y));
             }
             //i += 1;
             r += self.dr;
@@ -76,10 +82,10 @@ impl Spiral {
     }
 }
 
-fn chain() -> agrega::Pixfmt<agrega::Rgba32> {
+fn chain() -> Pixfmt<Rgba32> {
     let width = 16;
     let height = 7;
-    let mut pix = agrega::Pixfmt::<agrega::Rgba32>::new(width, height);
+    let mut pix = Pixfmt::<Rgba32>::new(width, height);
     let raw: [u32; 16 * 7] = [
         0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0xb4c29999, 0xff9a5757, 0xff9a5757,
         0xff9a5757, 0xff9a5757, 0xff9a5757, 0xff9a5757, 0xb4c29999, 0x00ffffff, 0x00ffffff,
@@ -105,7 +111,7 @@ fn chain() -> agrega::Pixfmt<agrega::Rgba32> {
         let g = ((v >> 8) & 0x00ff_u32) as u8;
         let b = ((v) & 0x00ff_u32) as u8;
         let a = (v >> 24) as u8;
-        let c = agrega::Rgba32::from_trait(agrega::Srgba8::new(r, g, b, a));
+        let c = Rgba32::from_trait(Srgba8::new(r, g, b, a));
         colors.push(c.premultiply());
     }
     let mut k = 0;
@@ -123,10 +129,10 @@ fn chain() -> agrega::Pixfmt<agrega::Rgba32> {
 fn rasterizers2_pre() {
     let (w, h) = (500, 450);
 
-    let pixf = agrega::Pixfmt::<agrega::Rgba8pre>::new(w, h);
-    let mut ren_base = agrega::RenderingBase::new(pixf);
+    let pixf = Pixfmt::<Rgba8pre>::new(w, h);
+    let mut ren_base = RenderingBase::new(pixf);
 
-    ren_base.clear(agrega::Rgba8::new(255, 255, 242, 255));
+    ren_base.clear(Rgb8::new(255, 255, 242));
 
     let start_angle = 0.0;
     let line_width = 3.0;
@@ -140,14 +146,14 @@ fn rasterizers2_pre() {
         let y = (h - h / 4 + 20) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ras_aa = agrega::RasterizerScanline::new();
-        let mut ren_aa = agrega::RenderingScanlineAASolid::with_base(&mut ren_base);
-        let mut stroke = agrega::Stroke::new(spiral);
+        let mut ras_aa = RasterizerScanline::new();
+        let mut ren_aa = RenderingScanlineAASolid::with_base(&mut ren_base);
+        let mut stroke = Stroke::new(spiral);
         stroke.width(line_width);
         //stroke.cap(round_cap);
-        ren_aa.color(agrega::Rgba8::new(102, 77, 26, 255));
+        ren_aa.color(Rgb8::new(102, 77, 26));
         ras_aa.add_path(&stroke);
-        agrega::render_scanlines(&mut ras_aa, &mut ren_aa);
+        render_scanlines(&mut ras_aa, &mut ren_aa);
     }
     // Aliased Pixel Accuracy
     {
@@ -155,9 +161,9 @@ fn rasterizers2_pre() {
         let y = (h / 4 + 50) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = agrega::RendererPrimitives::with_base(&mut ren_base);
-        ren_prim.line_color(agrega::Rgba8::new(102, 77, 26, 255));
-        let mut ras_al = agrega::RasterizerOutline::with_primitive(&mut ren_prim);
+        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        ren_prim.line_color(Rgb8::new(102, 77, 26));
+        let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         let trans = Roundoff::new(spiral);
         ras_al.add_path(&trans);
     }
@@ -168,9 +174,9 @@ fn rasterizers2_pre() {
         eprintln!("DDA SPIRAL: {} {} h {} h/4 {}", x, y, height, height / 4.0);
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = agrega::RendererPrimitives::with_base(&mut ren_base);
-        ren_prim.line_color(agrega::Rgba8::new(102, 77, 26, 255));
-        let mut ras_al = agrega::RasterizerOutline::with_primitive(&mut ren_prim);
+        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        ren_prim.line_color(Rgb8::new(102, 77, 26));
+        let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         ras_al.add_path(&spiral);
     }
     // Anti-Aliased Outline
@@ -179,10 +185,10 @@ fn rasterizers2_pre() {
         let y = (h - h / 4 + 20) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_oaa = agrega::RendererOutlineAA::with_base(&mut ren_base);
-        ren_oaa.color(agrega::Rgba8::new(102, 77, 26, 255));
+        let mut ren_oaa = RendererOutlineAA::with_base(&mut ren_base);
+        ren_oaa.color(Rgb8::new(102, 77, 26));
         ren_oaa.width(3.0);
-        let mut ras_oaa = agrega::RasterizerOutlineAA::with_renderer(&mut ren_oaa);
+        let mut ras_oaa = RasterizerOutlineAA::with_renderer(&mut ren_oaa);
         ras_oaa.round_cap(true);
         ras_oaa.add_path(&spiral);
     }
@@ -192,22 +198,22 @@ fn rasterizers2_pre() {
         let y = (h - h / 4 + 20) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        //let ren_oaa = agrega::RendererOutlineAA::with_base(&mut ren_base);
+        //let ren_oaa = RendererOutlineAA::with_base(&mut ren_base);
 
-        let filter = agrega::PatternFilterBilinear::new();
-        let mut pattern = agrega::LineImagePatternPow2::new(filter);
+        let filter = PatternFilterBilinear::new();
+        let mut pattern = LineImagePatternPow2::new(filter);
         let ch = chain();
         pattern.create(&ch);
-        let mut ren_img = agrega::RendererOutlineImg::with_base_and_pattern(&mut ren_base, pattern);
-        let mut ras_img = agrega::RasterizerOutlineAA::with_renderer(&mut ren_img);
-        //ren_oaa.color(&agrega::Rgba8::new(102,77,26,255));
+        let mut ren_img = RendererOutlineImg::with_base_and_pattern(&mut ren_base, pattern);
+        let mut ras_img = RasterizerOutlineAA::with_renderer(&mut ren_img);
+        //ren_oaa.color(&Rgb8::new(102,77,26));
         ras_img.round_cap(true);
         ras_img.add_path(&spiral);
     }
 
     {
-        let mut ras_aa = agrega::RasterizerScanline::new();
-        let mut ren_aa = agrega::RenderingScanlineAASolid::with_base(&mut ren_base);
+        let mut ras_aa = RasterizerScanline::new();
+        let mut ren_aa = RenderingScanlineAASolid::with_base(&mut ren_base);
         text(&mut ras_aa, &mut ren_aa, 50.0, 75.0, "Bresenham lines,\n\nregular accuracy");
         text(
             &mut ras_aa,
@@ -236,6 +242,7 @@ fn rasterizers2_pre() {
     // Revove alpha channel from data
     let data = ren_base.as_bytes();
     let mut out = vec![];
+    #[allow(clippy::needless_range_loop)]
     for i in 0..data.len() {
         if i % 4 < 3 {
             out.push(data[i]);
@@ -246,31 +253,8 @@ fn rasterizers2_pre() {
         .drop_alpha()
         .to_file("tests/std/tmp/rasterizers2_pre.png")
         .unwrap();
-    assert!(agrega::ppm::img_diff(
-        "tests/std/tmp/rasterizers2_pre.png",
-        "tests/images/rasterizers2_pre.png",
-    )
-    .unwrap());
-}
-
-#[cfg(feature = "freetype")]
-fn text<T>(
-    ras: &mut agrega::RasterizerScanline,
-    ren: &mut agrega::RenderingScanlineAASolid<T>,
-    x: f64,
-    y: f64,
-    txt: &str,
-) where
-    T: agrega::Pixel,
-{
-    let mut t = agrega::GsvText::new();
-    t.size(8.0, 0.0);
-    t.text(txt);
-    t.start_point(x, y);
-    t.flip(true);
-    let mut stroke = agrega::Stroke::new(t);
-    stroke.width(0.7);
-    ras.add_path(&stroke);
-    ren.color(agrega::Rgba8::new(0, 0, 0, 255));
-    agrega::render_scanlines(ras, ren);
+    assert!(
+        img_diff("tests/std/tmp/rasterizers2_pre.png", "tests/images/rasterizers2_pre.png",)
+            .unwrap()
+    );
 }

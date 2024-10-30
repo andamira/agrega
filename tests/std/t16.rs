@@ -1,21 +1,20 @@
-use agrega::Render;
+use agrega::{
+    img_diff, render_scanlines, render_scanlines_aa_solid, Path, Pixfmt, RasterizerScanline,
+    Render, RenderingBase, RenderingScanlineAASolid, Rgb8, Stroke,
+};
 
 #[test]
 fn t16_path_stroke_no_clip() {
     let (w, h) = (100, 100);
+    let pixf = Pixfmt::<Rgb8>::new(w, h);
 
-    let pixf = agrega::Pixfmt::<agrega::Rgb8>::new(w, h);
+    let mut ren_base = RenderingBase::new(pixf);
+    ren_base.clear(Rgb8::white());
 
-    let mut ren_base = agrega::RenderingBase::new(pixf);
+    let mut ren = RenderingScanlineAASolid::with_base(&mut ren_base);
+    ren.color(Rgb8::new(255, 0, 0));
 
-    ren_base.clear(agrega::Rgba8::new(255, 255, 255, 255));
-
-    let mut ren = agrega::RenderingScanlineAASolid::with_base(&mut ren_base);
-
-    ren.color(agrega::Rgba8::new(255, 0, 0, 255));
-
-    let mut ras = agrega::RasterizerScanline::new();
-
+    let mut ras = RasterizerScanline::new();
     //ras.clip_box(40.0, 0.0, w as f64-40.0, h as f64);
 
     ras.reset();
@@ -23,26 +22,22 @@ fn t16_path_stroke_no_clip() {
     ras.line_to(50.0, 90.0);
     ras.line_to(90.0, 10.0);
 
-    agrega::render_scanlines(&mut ras, &mut ren);
+    render_scanlines(&mut ras, &mut ren);
 
-    let mut ps = agrega::Path::new();
+    let mut ps = Path::new();
     ps.remove_all();
     ps.move_to(10.0, 10.0);
     ps.line_to(50.0, 90.0);
     ps.line_to(90.0, 10.0);
     ps.line_to(10.0, 10.0);
 
-    let mut pg = agrega::Stroke::new(ps);
-
+    let mut pg = Stroke::new(ps);
     pg.width(2.0);
-    ras.add_path(&mut pg);
+    ras.add_path(&pg);
 
-    agrega::render_scanlines_aa_solid(&mut ras, &mut ren_base, agrega::Rgba8::new(0, 0, 0, 255));
+    render_scanlines_aa_solid(&mut ras, &mut ren_base, Rgb8::black());
 
     ren_base.to_file("tests/std/tmp/agg_test_16.png").unwrap();
 
-    assert!(
-        agrega::ppm::img_diff("tests/std/tmp/agg_test_16.png", "tests/images/agg_test_16.png")
-            .unwrap()
-    );
+    assert!(img_diff("tests/std/tmp/agg_test_16.png", "tests/images/agg_test_16.png").unwrap());
 }

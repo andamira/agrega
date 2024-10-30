@@ -1,13 +1,14 @@
+use super::text_h12 as text;
 use agrega::{
-    render_scanlines, GsvText, LineJoin, Path, Pixel, Pixfmt, RasterizerScanline, Render,
-    RenderingBase, RenderingScanlineAASolid, Rgb8, Rgba8, Stroke,
+    img_diff, render_scanlines, LineJoin, Path, Pixfmt, RasterizerScanline, RenderingBase,
+    RenderingScanlineAASolid, Rgb8, Stroke,
 };
 
 #[test]
 fn t21_line_join() {
     let pix = Pixfmt::<Rgb8>::new(300, 100);
     let mut ren_base = RenderingBase::new(pix);
-    ren_base.clear(Rgba8::new(255, 255, 255, 255));
+    ren_base.clear(Rgb8::white());
 
     let joins = [LineJoin::Miter, LineJoin::Round, LineJoin::Bevel];
     for (i, join) in joins.iter().enumerate() {
@@ -34,28 +35,5 @@ fn t21_line_join() {
     text(&mut ras, &mut ren, 225.0, 90.0, "Bevel");
 
     ren_base.to_file("tests/std/tmp/line_join.png").unwrap();
-    assert!(
-        agrega::ppm::img_diff("tests/std/tmp/line_join.png", "tests/images/line_join.png").unwrap()
-    );
-}
-
-fn text<T>(
-    ras: &mut RasterizerScanline,
-    ren: &mut RenderingScanlineAASolid<T>,
-    x: f64,
-    y: f64,
-    txt: &str,
-) where
-    T: Pixel,
-{
-    let mut t = GsvText::new();
-    t.size(12.0, 0.0);
-    t.text(txt);
-    t.start_point(x, y);
-    t.flip(true);
-    let mut stroke = Stroke::new(t);
-    stroke.width(1.0);
-    ras.add_path(&stroke);
-    ren.color(Rgba8::new(0, 0, 0, 255));
-    render_scanlines(ras, ren);
+    assert!(img_diff("tests/std/tmp/line_join.png", "tests/images/line_join.png").unwrap());
 }
