@@ -44,7 +44,7 @@ nightly = [
 ] # enables all the following features:
 	# WAIT: [doc_cfg](https://github.com/rust-lang/rust/issues/43781)
 	# WAIT: [doc_notable_trait](https://github.com/rust-lang/rust/issues/45040)
-	nightly_doc = ["devela/nightly_doc"]
+	nightly_doc = []
 
 # capabilities
 # ------------------------------

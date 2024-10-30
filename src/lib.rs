@@ -29,13 +29,11 @@ items! {
     mod clip;
     pub(crate) mod scan;
 }
-
 #[cfg(any(feature = "std", feature = "no_std"))]
 items! {
     pub mod color;
     pub use color::*;
 }
-
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 items! {
     mod alphamask;
@@ -60,21 +58,13 @@ items! {
 }
 
 #[cfg(feature = "std")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
-pub mod ppm;
+items! {
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
+    pub mod ppm;
+    #[doc(hidden)]
+    pub use ppm::*;
+}
 
-/// Library dependencies. <br/><hr>
-pub mod _dep {
-    #[doc(inline)]
-    pub use devela;
-    #[doc(inline)]
-    #[cfg(feature = "freetype")]
-    pub use freetype;
-}
-/// Gallery of images. <br/><hr>
-pub mod _gallery {
-    #![doc = include_str!("./Gallery.md")]
-}
 /// All items are flat re-exported here. <br/><hr>
 pub mod all {
     #[doc(inline)]
@@ -90,4 +80,15 @@ pub mod all {
     #[doc(inline)]
     #[cfg(feature = "std")]
     pub use super::ppm::*;
+}
+/// Library dependencies. <br/><hr>
+pub mod _dep {
+    pub use devela;
+    #[doc(inline)]
+    #[cfg(feature = "freetype")]
+    pub use freetype;
+}
+/// Gallery of images. <br/><hr>
+pub mod _gallery {
+    #![doc = include_str!("./Gallery.md")]
 }
