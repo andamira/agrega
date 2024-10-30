@@ -427,6 +427,19 @@ impl Srgba8 {
     pub const fn into_array(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
+
+    /// Returns pure white color.
+    #[inline]
+    #[must_use]
+    pub const fn white() -> Self {
+        Self::new(255, 255, 255, 255)
+    }
+    /// Returns pure black color.
+    #[inline]
+    #[must_use]
+    pub const fn black() -> Self {
+        Self::new(0, 0, 0, 255)
+    }
 }
 
 /// RGBA color with `f32` components for higher precision.
