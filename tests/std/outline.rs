@@ -1,4 +1,4 @@
-use agrega::{img_diff, Path, Pixfmt, RasterizerOutline, RendererPrimitives, RenderingBase, Rgb8};
+use agrega::{img_diff, Path, Pixfmt, RasterizerOutline, RendererOutline, RenderingBase, Rgb8};
 
 #[test]
 fn t24_outline_basic_render() {
@@ -6,7 +6,7 @@ fn t24_outline_basic_render() {
     let mut ren_base = RenderingBase::new(pix);
     ren_base.clear(Rgb8::white());
 
-    let mut ren = RendererPrimitives::with_base(&mut ren_base);
+    let mut ren = RendererOutline::with_base(&mut ren_base);
     ren.line_color(Rgb8::black());
 
     let mut path = Path::new();

@@ -99,7 +99,7 @@ Render for primitive shapes: lines, rectangles, and ellipses; filled or
 # #[cfg(feature = "std")]
 # {
 use agrega::{
-    Path, Pixfmt, Rgb8, Rgba8, RenderingBase, DrawOutline, RendererPrimitives,
+    Path, Pixfmt, Rgb8, Rgba8, RenderingBase, DrawOutline, RendererOutline,
     RasterizerOutline,
 };
 
@@ -107,7 +107,7 @@ let pix = Pixfmt::<Rgb8>::new(100,100);
 let mut ren_base = RenderingBase::new(pix);
 ren_base.clear( Rgba8::new(255, 255, 255, 255) );
 
-let mut ren = RendererPrimitives::with_base(&mut ren_base);
+let mut ren = RendererOutline::with_base(&mut ren_base);
 ren.line_color(Rgba8::new(0,0,0,255));
 
 let mut path = Path::new();

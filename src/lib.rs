@@ -45,7 +45,6 @@ items! {
     mod pixfmt;
     pub mod interp;
     pub mod outline;
-    pub mod outline_aa;
     pub mod paths;
     pub mod raster;
     pub mod render;
@@ -56,7 +55,7 @@ items! {
     pub use {alphamask::*, util::*, pixfmt::*};
     #[doc(hidden)]
     pub use {
-        base::*, clip::*, interp::*, outline::*, outline_aa::*, paths::*, raster::*,
+        base::*, clip::*, interp::*, outline::*, paths::*, raster::*,
         render::*, stroke::*, text::*, traits::*, transform::*,
     };
 }
@@ -77,8 +76,8 @@ pub mod all {
     #[doc(inline)]
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     pub use super::{
-        alphamask::*, base::*, clip::*, color::*, interp::*, outline::*, outline_aa::*, paths::*,
-        pixfmt::*, raster::*, render::*, stroke::*, text::*, transform::*,
+        alphamask::*, base::*, clip::*, color::*, interp::*, outline::*, paths::*, pixfmt::*,
+        raster::*, render::*, stroke::*, text::*, transform::*,
     };
 
     #[doc(inline)]

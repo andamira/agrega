@@ -1,7 +1,6 @@
 use agrega::{
     img_diff, render_scanlines, Pixfmt, RasterizerOutline, RasterizerScanline, Render,
-    RendererPrimitives, RenderingBase, RenderingScanlineAASolid, Rgb8, Stroke, Vertex,
-    VertexSource,
+    RendererOutline, RenderingBase, RenderingScanlineAASolid, Rgb8, Stroke, Vertex, VertexSource,
 };
 
 pub struct Roundoff<T: VertexSource> {
@@ -114,7 +113,7 @@ fn rasterizers2() {
         let y = (h / 4 + 50) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        let mut ren_prim = RendererOutline::with_base(&mut ren_base);
         ren_prim.line_color(Rgb8::new(102, 77, 26));
         let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         let trans = Roundoff::new(spiral);
@@ -127,7 +126,7 @@ fn rasterizers2() {
         eprintln!("DDA SPIRAL: {} {} h {} h/4 {}", x, y, height, height / 4.0);
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        let mut ren_prim = RendererOutline::with_base(&mut ren_base);
         ren_prim.line_color(Rgb8::new(102, 77, 26));
         let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         ras_al.add_path(&spiral);

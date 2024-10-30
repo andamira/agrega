@@ -3,8 +3,8 @@
 use super::text_h8_sw07 as text;
 use agrega::{
     img_diff, render_scanlines, DrawOutline, LineImagePatternPow2, PatternFilterBilinear, Pixel,
-    Pixfmt, RasterizerOutline, RasterizerOutlineAA, RasterizerScanline, Render, RendererOutlineAA,
-    RendererOutlineImg, RendererPrimitives, RenderingBase, RenderingScanlineAASolid, Rgb8, Rgba32,
+    Pixfmt, RasterizerOutline, RasterizerOutlineAA, RasterizerScanline, Render, RendererOutline,
+    RendererOutlineAA, RendererOutlineImg, RenderingBase, RenderingScanlineAASolid, Rgb8, Rgba32,
     Rgba8pre, Srgba8, Stroke, Vertex, VertexSource,
 };
 
@@ -161,7 +161,7 @@ fn rasterizers2_pre() {
         let y = (h / 4 + 50) as f64;
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        let mut ren_prim = RendererOutline::with_base(&mut ren_base);
         ren_prim.line_color(Rgb8::new(102, 77, 26));
         let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         let trans = Roundoff::new(spiral);
@@ -174,7 +174,7 @@ fn rasterizers2_pre() {
         eprintln!("DDA SPIRAL: {} {} h {} h/4 {}", x, y, height, height / 4.0);
         let spiral = Spiral::new(x, y, r1, r2, step, start_angle);
 
-        let mut ren_prim = RendererPrimitives::with_base(&mut ren_base);
+        let mut ren_prim = RendererOutline::with_base(&mut ren_base);
         ren_prim.line_color(Rgb8::new(102, 77, 26));
         let mut ras_al = RasterizerOutline::with_primitive(&mut ren_prim);
         ras_al.add_path(&spiral);
