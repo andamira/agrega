@@ -12,7 +12,7 @@ use devela::{iif, ExtFloat};
 
 /* utils */
 
-/// Convert an f64 [0,1] component to a u8 [0,255] component
+/// Convert an f64 \[0‥1\] component to a u8 \[0‥255\] component
 #[inline] #[must_use] #[rustfmt::skip]
 fn cu8(v: f64) -> u8 { (v * 255.0).round() as u8 }
 

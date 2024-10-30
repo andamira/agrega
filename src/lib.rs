@@ -37,7 +37,6 @@ items! {
 }
 
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "alloc")))]
 items! {
     mod alphamask;
     mod base;
