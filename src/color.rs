@@ -111,6 +111,12 @@ impl Gray8 {
     pub const fn new(value: u8) -> Self {
         Self { value, alpha: 255 }
     }
+    /// Creates a grayscale color with specified alpha.
+    #[inline]
+    #[must_use]
+    pub const fn new_with_alpha(value: u8, alpha: u8) -> Self {
+        Self { value, alpha }
+    }
 
     /// Converts a `Color` trait type to grayscale.
     #[inline]
@@ -119,14 +125,6 @@ impl Gray8 {
         let lum = luminance_u8(c.red8(), c.green8(), c.blue8());
         Self::new_with_alpha(lum, c.alpha8())
     }
-
-    /// Creates a grayscale color with specified alpha.
-    #[inline]
-    #[must_use]
-    pub const fn new_with_alpha(value: u8, alpha: u8) -> Self {
-        Self { value, alpha }
-    }
-
     /// Converts a two-element slice `[value, alpha]` to a grayscale color.
     ///
     /// # Panics
@@ -140,14 +138,14 @@ impl Gray8 {
     /// Converts a two-element array `[value, alpha]` to a grayscale color.
     #[inline]
     #[must_use]
-    pub const fn from_array(v: [u8; 2]) -> Self {
+    pub const fn from_array2(v: [u8; 2]) -> Self {
         Self::new_with_alpha(v[0], v[1])
     }
 
     /// Returns the grayscale and alpha components as an array `[value, alpha]`.
     #[inline]
     #[must_use]
-    pub const fn into_array(&self) -> [u8; 2] {
+    pub const fn into_array2(&self) -> [u8; 2] {
         [self.value, self.alpha]
     }
 }
@@ -209,13 +207,6 @@ impl Rgb8 {
         Self::new(r as u8, g as u8, b as u8)
     }
 
-    /// Converts a three-element array `[r, g, b]` to an `Rgba8` color.
-    #[inline]
-    #[must_use]
-    pub const fn from_array(v: [u8; 3]) -> Self {
-        Self::new(v[0], v[1], v[2])
-    }
-
     /// Returns pure white color `(255, 255, 255)`.
     #[inline]
     #[must_use]
@@ -245,11 +236,30 @@ impl Rgb8 {
         Rgb8 { r: v[0], g: v[1], b: v[2] }
     }
 
+    /// Converts a three-element array `[r, g, b]` to an `Rgba8` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array3(v: [u8; 3]) -> Self {
+        Self::new(v[0], v[1], v[2])
+    }
+    /// Converts a three-element array `[r, g, b]` to an `Rgba8` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array4(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2])
+    }
+
     /// Returns the color components as an array `[r, g, b]`.
     #[inline]
     #[must_use]
-    pub const fn into_array(&self) -> [u8; 3] {
+    pub const fn into_array3(&self) -> [u8; 3] {
         [self.r, self.g, self.b]
+    }
+    /// Returns the color components as an array `[r, g, b]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array4(&self) -> [u8; 4] {
+        [self.r, self.g, self.b, u8::MAX]
     }
 }
 
@@ -290,6 +300,16 @@ impl Rgba8 {
     /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
     #[inline]
     pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::from_array4(v)
+    }
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
+    #[inline]
+    pub const fn from_array3(v: [u8; 4]) -> Self {
+        Self::new(v[0], v[1], v[2], v[3])
+    }
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8` color.
+    #[inline]
+    pub const fn from_array4(v: [u8; 4]) -> Self {
         Self::new(v[0], v[1], v[2], v[3])
     }
 
@@ -322,18 +342,27 @@ impl Rgba8 {
     }
 
     /// Sets the color to fully transparent black (`0, 0, 0, 0`).
-    #[inline]
+    #[inline] #[rustfmt::skip]
     pub fn clear(&mut self) {
-        self.r = 0;
-        self.g = 0;
-        self.b = 0;
-        self.a = 0;
+        self.r = 0; self.g = 0; self.b = 0; self.a = 0;
     }
 
     /// Returns the color components as an array `[r, g, b, a]`.
     #[inline]
     #[must_use]
     pub const fn into_array(&self) -> [u8; 4] {
+        self.into_array4()
+    }
+    /// Returns the color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array3(&self) -> [u8; 3] {
+        [self.r, self.g, self.b]
+    }
+    /// Returns the color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array4(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
 }
@@ -370,6 +399,18 @@ impl Rgba8pre {
     #[inline]
     #[must_use]
     pub const fn from_array(v: [u8; 4]) -> Self {
+        Self::from_array4(v)
+    }
+    /// Converts a three-element array `[r, g, b]` to an `Rgba8pre` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array3(v: [u8; 3]) -> Self {
+        Self::new(v[0], v[1], v[2], u8::MAX)
+    }
+    /// Converts a four-element array `[r, g, b, alpha]` to an `Rgba8pre` color.
+    #[inline]
+    #[must_use]
+    pub const fn from_array4(v: [u8; 4]) -> Self {
         Self::new(v[0], v[1], v[2], v[3])
     }
 
@@ -377,6 +418,18 @@ impl Rgba8pre {
     #[inline]
     #[must_use]
     pub const fn into_array(&self) -> [u8; 4] {
+        self.into_array4()
+    }
+    /// Returns the premultiplied color components as an array `[r, g, b]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array3(&self) -> [u8; 3] {
+        [self.r, self.g, self.b]
+    }
+    /// Returns the premultiplied color components as an array `[r, g, b, a]`.
+    #[inline]
+    #[must_use]
+    pub const fn into_array4(&self) -> [u8; 4] {
         [self.r, self.g, self.b, self.a]
     }
 }

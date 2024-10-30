@@ -253,7 +253,7 @@ impl Pixel for Pixfmt<Rgba8> {
 
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, color: C) {
         let bpp = Self::bpp();
-        let color = Rgba8::from_trait(color).into_array();
+        let color = Rgba8::from_trait(color).into_array3();
         let p = &mut self.rbuf[id][..n * bpp];
         for chunk in p.chunks_mut(bpp) {
             chunk.copy_from_slice(&color);
@@ -292,7 +292,7 @@ impl Pixel for Pixfmt<Rgba8> {
     fn fill<C: Color>(&mut self, color: C) {
         let n = 4;
         let bpp = Self::bpp();
-        let c = Rgba8::from_trait(color).into_array();
+        let c = Rgba8::from_trait(color).into_array4();
         let c2 = [
             c[0], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[1],
             c[2], c[3],
@@ -324,14 +324,14 @@ impl Pixel for Pixfmt<Rgb8> {
 
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, color: C) {
         let bpp = Self::bpp();
-        let color = Rgb8::from_trait(color).into_array();
+        let color = Rgb8::from_trait(color).into_array3();
         let p = &mut self.rbuf[id][..bpp * n];
         for chunk in p.chunks_mut(bpp) {
             chunk.copy_from_slice(&color);
         }
     }
     fn set<C: Color>(&mut self, id: (usize, usize), color: C) {
-        let color = Rgb8::from_trait(color).into_array();
+        let color = Rgb8::from_trait(color).into_array3();
         let p = &mut self.rbuf[id][..3];
         p.copy_from_slice(&color);
         //p[0] = color.red8();
@@ -352,7 +352,7 @@ impl Pixel for Pixfmt<Rgb8> {
     fn fill<C: Color>(&mut self, color: C) {
         let n = 4;
         let bpp = Self::bpp();
-        let c = Rgb8::from_trait(color).into_array();
+        let c = Rgb8::from_trait(color).into_array3();
         let c2 = [c[0], c[1], c[2], c[0], c[1], c[2], c[0], c[1], c[2], c[0], c[1], c[2]];
         let mut chunks = self.rbuf.data.chunks_exact_mut(bpp * n);
         for chunk in chunks.by_ref() {
@@ -381,7 +381,7 @@ impl Pixel for Pixfmt<Rgba8pre> {
 
     fn setn<C: Color>(&mut self, id: (usize, usize), n: usize, color: C) {
         let bpp = Self::bpp();
-        let color = Rgba8pre::from_trait(color).into_array();
+        let color = Rgba8pre::from_trait(color).into_array4();
         let p = &mut self.rbuf[id][..n * bpp];
         for chunk in p.chunks_mut(bpp) {
             chunk.copy_from_slice(&color);
@@ -410,7 +410,7 @@ impl Pixel for Pixfmt<Rgba8pre> {
     fn fill<C: Color>(&mut self, color: C) {
         let n = 4;
         let bpp = Self::bpp();
-        let c = Rgba8pre::from_trait(color).into_array();
+        let c = Rgba8pre::from_trait(color).into_array4();
         let c2 = [
             c[0], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[1], c[2], c[3], c[0], c[1],
             c[2], c[3],
