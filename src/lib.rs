@@ -36,6 +36,7 @@ items! {
 #[cfg(any(feature = "std", feature = "no_std"))]
 items! {
     pub mod color;
+    #[doc(hidden)]
     pub use color::*;
 }
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
@@ -52,20 +53,20 @@ items! {
     pub mod text;
     pub mod transform;
 
-    pub use {alphamask::*, util::*, pixfmt::*};
     #[doc(hidden)]
     pub use {
         base::*, clip::*, interp::*, outline::*, paths::*, raster::*,
         render::*, stroke::*, text::*, traits::*, transform::*,
+        alphamask::*, util::*, pixfmt::*,
     };
 }
 
 #[cfg(feature = "std")]
 items! {
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
-    pub mod ppm;
+    pub mod file;
     #[doc(hidden)]
-    pub use ppm::*;
+    pub use file::*;
 }
 
 /// All items are flat re-exported here. <br/><hr>
@@ -82,7 +83,7 @@ pub mod all {
 
     #[doc(inline)]
     #[cfg(feature = "std")]
-    pub use super::ppm::*;
+    pub use super::file::*;
 }
 /// Library dependencies. <br/><hr>
 pub mod _dep {

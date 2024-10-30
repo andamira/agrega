@@ -1,7 +1,7 @@
-//! Writing of PPM (Portable Pixmap Format) files
-//!
-//! See <https://en.wikipedia.org/wiki/Netpbm_format#PPM_example>
-//!
+// agrega::file
+//
+//! Writing and reading image files
+
 use std::path::Path;
 
 pub fn read_file<P: AsRef<Path>>(

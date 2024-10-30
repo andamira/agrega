@@ -1,6 +1,6 @@
 use agrega::{
-    ppm, render_scanlines, Pixfmt, RasterizerScanline, Render, RenderingBase,
-    RenderingScanlineAASolid, Rgb8, Rgba8,
+    render_scanlines, Pixfmt, RasterizerScanline, Render, RenderingBase, RenderingScanlineAASolid,
+    Rgb8, Rgba8, img_diff,
 };
 
 #[test]
@@ -23,7 +23,7 @@ fn t00_example() {
 
     // Save the image to a file
     ren_base.to_file("tests/std/tmp/little_black_triangle.png").unwrap();
-    assert!(ppm::img_diff(
+    assert!(img_diff(
         "tests/std/tmp/little_black_triangle.png",
         "tests/images/little_black_triangle.png"
     )

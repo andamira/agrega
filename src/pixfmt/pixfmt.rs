@@ -3,6 +3,8 @@
 use super::buffer::RenderingBuffer;
 use crate::{color::*, util::*, Color, Pixel, PixelSource};
 use devela::{iif, PhantomData, Vec};
+#[cfg(feature = "std")]
+use crate::file::read_file;
 
 /// Pixel format wrapper around raw pixel component data.
 ///
@@ -161,7 +163,7 @@ where
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     pub fn from_file<P: AsRef<std::path::Path>>(filename: P) -> Result<Self, image::ImageError> {
-        let (buf, w, h) = crate::ppm::read_file(filename)?;
+        let (buf, w, h) = read_file(filename)?;
         Ok(Self { rbuf: RenderingBuffer::from_vec(buf, w, h, 3), phantom: PhantomData })
     }
 }

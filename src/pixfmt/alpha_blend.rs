@@ -3,7 +3,7 @@ use crate::base::RenderingBase;
 use crate::{color::*, util::*, Color, Pixel};
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
-use std::path::Path;
+use {std::path::Path, crate::file::write_file};
 
 /// TODO
 pub struct PixfmtAlphaBlend<'a, T: Pixel, C> {
@@ -47,7 +47,7 @@ impl Pixel for PixfmtAlphaBlend<'_, Pixfmt<Rgb8>, Gray8> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        crate::ppm::write_file(
+        write_file(
             self.as_bytes(),
             self.width(),
             self.height(),
