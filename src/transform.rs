@@ -5,7 +5,6 @@ use core::ops::Mul;
 use devela::ExtFloat;
 
 /// A 2D affine transformation matrix that supports translation, scaling, rotation, and skewing.
-// TODO:FUTURE:IMPROVE: use devela matrix
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Transform {
     /// Scale in the x-direction

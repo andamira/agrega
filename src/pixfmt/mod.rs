@@ -7,7 +7,7 @@ mod alpha_blend;
 mod buffer;
 mod pixel;
 mod pixfmt;
-pub use {alpha_blend::PixfmtAlphaBlend, pixel::Pixel, pixfmt::*};
+pub use {alpha_blend::*, buffer::*, pixel::*, pixfmt::*};
 
 // -----
 use crate::color::*;

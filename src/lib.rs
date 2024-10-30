@@ -24,14 +24,22 @@ compile_error!("You can't enable `safe` and `unsafe*` features at the same time.
 #[allow(unused_macros)]
 macro_rules! items { ( $($item:item)* ) => { $($item)* }; }
 
+/* modules ordered first by feature-bounds */
+
 mod traits;
 mod util;
+#[doc(hidden)]
+#[allow(unused_imports)]
+pub use {traits::*, util::*};
 
 #[cfg(feature = "alloc")]
 items! {
-    pub(crate) mod cell;
+    mod cell;
     mod clip;
-    pub(crate) mod scan;
+    pub mod scanline;
+    #[doc(hidden)]
+    #[allow(unused_imports)]
+    pub use {cell::*, clip::*, scanline::*};
 }
 #[cfg(any(feature = "std", feature = "no_std"))]
 items! {
@@ -43,21 +51,19 @@ items! {
 items! {
     mod alphamask;
     mod base;
-    mod pixfmt;
     pub mod interp;
     pub mod outline;
     pub mod paths;
-    pub mod raster;
-    pub mod render;
+    pub mod pixfmt;
     pub mod stroke;
     pub mod text;
     pub mod transform;
 
     #[doc(hidden)]
+    #[allow(unused_imports)]
     pub use {
-        base::*, clip::*, interp::*, outline::*, paths::*, raster::*,
-        render::*, stroke::*, text::*, traits::*, transform::*,
-        alphamask::*, util::*, pixfmt::*,
+        alphamask::*, base::*, interp::*, outline::*, paths::*,  pixfmt::*,
+        stroke::*, text::*, transform::*,
     };
 }
 
@@ -69,23 +75,31 @@ items! {
     pub use file::*;
 }
 
-/// All items are flat re-exported here. <br/><hr>
+/// All items are flat re-exported here.<br/><hr>
 pub mod all {
     #[doc(inline)]
     pub use super::{traits::*, util::*};
 
     #[doc(inline)]
+    #[cfg(feature = "alloc")]
+    pub use super::scanline::*;
+
+    #[doc(inline)]
+    #[cfg(any(feature = "std", feature = "no_std"))]
+    pub use super::color::*;
+
+    #[doc(inline)]
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     pub use super::{
-        alphamask::*, base::*, clip::*, color::*, interp::*, outline::*, paths::*, pixfmt::*,
-        raster::*, render::*, stroke::*, text::*, transform::*,
+        alphamask::*, base::*, clip::*, interp::*, outline::*, paths::*, pixfmt::*, stroke::*,
+        text::*, transform::*,
     };
 
     #[doc(inline)]
     #[cfg(feature = "std")]
     pub use super::file::*;
 }
-/// Library dependencies. <br/><hr>
+/// Library dependencies.<br/><hr>
 pub mod _dep {
     pub use devela;
     #[doc(inline)]

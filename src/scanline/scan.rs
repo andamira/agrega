@@ -1,10 +1,15 @@
+// agrega::scanline::scan
+//
 //! Scanlines
+//
 
 use alloc::{vec, vec::Vec};
-//use std::collections::HashMap;
+// use std::collections::HashMap;
 
-/// Contigious area of data
-#[derive(Debug, Default)]
+const LAST_X: i64 = 0x7FFF_FFF0;
+
+/// Contiguous area of data
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct Span {
     /// Starting x position
     pub x: i64,
@@ -37,8 +42,6 @@ pub(crate) struct ScanlineU8 {
     /// State variable
     pub y: i64,
 }
-
-const LAST_X: i64 = 0x7FFF_FFF0;
 
 impl ScanlineU8 {
     /// Create a new empty scanline

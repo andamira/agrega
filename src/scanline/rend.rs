@@ -1,16 +1,10 @@
 //! Renderer
 
 use crate::{
-    base::RenderingBase,
-    clip::{ClipSide, Rectangle},
-    color::Rgba8,
-    interp::{line_mr, LineParameters},
-    outline::Subpixel,
-    pixfmt::Pixfmt,
-    raster::{len_i64_xy, RasterizerScanline},
-    scan::ScanlineU8,
-    Color, DrawOutline, Pixel, Render, Rgb8, PixelSource, Transform, VertexSource, MAX_HALF_WIDTH,
-    POLY_MR_SUBPIXEL_SHIFT, POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
+    len_i64_xy, line_mr, ClipSide, Color, DrawOutline, LineParameters, Pixel, PixelSource, Pixfmt,
+    RasterizerScanline, Rectangle, Render, RenderingBase, Rgb8, Rgba8, ScanlineU8, Subpixel,
+    Transform, VertexSource, MAX_HALF_WIDTH, POLY_MR_SUBPIXEL_SHIFT, POLY_SUBPIXEL_MASK,
+    POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
 #[allow(unused_imports)]

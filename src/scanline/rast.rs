@@ -3,7 +3,7 @@
 //! Rasterizer
 
 use crate::{
-    cell::RasterizerCell, clip::Clip, paths::PathCommand, paths::Vertex, scan::ScanlineU8,
+    RasterizerCell, Clip, PathCommand, Vertex, ScanlineU8,
     VertexSource, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::vec::Vec;

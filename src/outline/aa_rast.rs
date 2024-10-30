@@ -1,11 +1,8 @@
 // agrega::outline::aa_rast
 
 use crate::{
-    interp::{DrawVars, LineParameters},
-    paths::{PathCommand, Vertex},
-    raster::len_i64,
-    stroke::LineJoin,
-    DrawOutline, VertexSource, POLY_SUBPIXEL_SCALE,
+    len_i64, DrawOutline, DrawVars, LineJoin, LineParameters, PathCommand, Vertex, VertexSource,
+    POLY_SUBPIXEL_SCALE,
 };
 use alloc::{vec, vec::Vec};
 #[allow(unused_imports)]

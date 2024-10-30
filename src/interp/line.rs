@@ -18,7 +18,7 @@ use super::{
     DistanceInterpolator, DistanceInterpolator1, DistanceInterpolator2, DistanceInterpolator3,
     LineParameters,
 };
-use crate::{render::LineInterpolator, util::*, RenderOutline};
+use crate::{LineInterpolator, util::*, RenderOutline};
 use alloc::{vec, vec::Vec};
 #[allow(unused_imports)]
 use devela::ExtFloat;

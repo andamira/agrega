@@ -1,6 +1,6 @@
 // agrega::interp
 
-use crate::{render::LineInterpolatorImage, util::*};
+use crate::{LineInterpolatorImage, util::*};
 #[allow(unused_imports)]
 use devela::ExtFloat;
 

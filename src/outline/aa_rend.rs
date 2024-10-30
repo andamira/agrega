@@ -1,14 +1,9 @@
 // agrega::outline::aa_rend
 
 use crate::{
-    base::RenderingBase,
-    clip::Rectangle,
-    color::Rgba8,
-    interp::{DistanceInterpolator0, DistanceInterpolator00, LineParameters},
-    raster::len_i64_xy,
-    render::{clip_line_segment, LINE_MAX_LENGTH},
-    Color, DrawOutline, Pixel, RenderOutline, MAX_HALF_WIDTH, POLY_SUBPIXEL_MASK,
-    POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
+    clip_line_segment, len_i64_xy, Color, DistanceInterpolator0, DistanceInterpolator00,
+    DrawOutline, LineParameters, Pixel, Rectangle, RenderOutline, RenderingBase, Rgba8,
+    LINE_MAX_LENGTH, MAX_HALF_WIDTH, POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
 #[allow(unused_imports)]
