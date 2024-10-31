@@ -61,14 +61,6 @@ items! {
     pub use {alphamask::*, base::*, interp::*, outline::*,  pixfmt::*, text::*};
 }
 
-#[cfg(feature = "std")]
-items! {
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
-    pub mod file;
-    #[doc(hidden)]
-    pub use file::*;
-}
-
 /// All items are flat re-exported here.<br/><hr>
 pub mod all {
     #[doc(inline)]
@@ -86,10 +78,6 @@ pub mod all {
     #[allow(unused_imports)]
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     pub use super::{alphamask::*, base::*, interp::*, outline::*, pixfmt::*, text::*};
-
-    #[doc(inline)]
-    #[cfg(feature = "std")]
-    pub use super::file::*;
 }
 /// Library dependencies.<br/><hr>
 pub mod _dep {

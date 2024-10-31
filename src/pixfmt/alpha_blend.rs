@@ -1,9 +1,9 @@
 use super::Pixfmt;
-use crate::base::RenderingBase;
+use crate::RenderingBase;
 use crate::{color::*, util::*, Color, Pixel};
 use core::marker::PhantomData;
 #[cfg(feature = "std")]
-use {crate::file::write_file, std::path::Path};
+use {crate::write_file, std::path::Path};
 
 /// TODO
 pub struct PixfmtAlphaBlend<'a, T: Pixel, C> {

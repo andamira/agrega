@@ -1,7 +1,7 @@
 use super::{PixelSource, Pixfmt};
 use crate::{color::*, util::*};
 #[cfg(feature = "std")]
-use {crate::file::write_file, std::path::Path};
+use {crate::write_file, std::path::Path};
 
 macro_rules! impl_pixel_common {
     () => {

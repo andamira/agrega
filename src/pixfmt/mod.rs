@@ -10,6 +10,13 @@ mod pixfmt;
 #[allow(unused_imports)]
 pub use {alpha_blend::*, buffer::*, pixel::*, pixfmt::*};
 
+#[cfg(feature = "std")]
+items! {
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
+    mod file;
+    pub use file::*;
+}
+
 // -----
 use crate::color::*;
 

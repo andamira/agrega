@@ -1,8 +1,8 @@
 //
 
-use super::buffer::RenderingBuffer;
+use super::RenderingBuffer;
 #[cfg(feature = "std")]
-use crate::file::read_file;
+use crate::read_file;
 use crate::{color::*, util::*, Color, Pixel, PixelSource};
 use devela::{iif, PhantomData, Vec};
 
