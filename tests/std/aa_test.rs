@@ -320,16 +320,16 @@ fn calc_linear_gradient_transform(x1: f64, y1: f64, x2: f64, y2: f64) -> Transfo
     let dy = y2 - y1;
     let mut mtx = Transform::new();
     let s = (dx * dx + dy * dy).sqrt() / gradient_d2;
-    mtx = mtx * Transform::new_scale(s, s);
-    mtx = mtx * Transform::new_rotate(dy.atan2(dx));
-    mtx = mtx * Transform::new_translate(x1 + 0.5, y1 + 0.5);
+    mtx = mtx * Transform::scaling(s, s);
+    mtx = mtx * Transform::rotating(dy.atan2(dx));
+    mtx = mtx * Transform::translating(x1 + 0.5, y1 + 0.5);
     mtx.invert();
 
     // Above is equivalent to this
     // let mut mtx2 = Transform::new();
     // mtx2.scale(s,s);
     // mtx2.rotate(dy.atan2(dx));
-    // mtx2.translate(x1+0.5, y1+0.5);
+    // mtx2.set_translate(x1+0.5, y1+0.5);
     // mtx2.invert();
     // assert!(mtx == mtx2);
 

@@ -30,8 +30,8 @@ fn lion_png() {
     let g_base_dy = (r.y2() - r.y1()) / 2.0;
 
     let mut mtx = Transform::new();
-    mtx.translate(-g_base_dx, -g_base_dy);
-    mtx.translate((w / 2) as f64, (h / 2) as f64);
+    mtx.set_translate(-g_base_dx, -g_base_dy);
+    mtx.set_translate((w / 2) as f64, (h / 2) as f64);
     let t: Vec<Path> = paths.into_iter().map(|p| p.transformed(&mtx)).collect();
 
     render_all_paths(&mut ras, &mut ren, &t, &colors);
