@@ -1,79 +1,95 @@
 // agrega::scanline::scan
 //
-//! Scanlines
+//! Scanlines.
+//!
+//! This module provides structures and functions for working with scanlines,
+//! representing contiguous rows of image data in the form of spans. Each span
+//! defines a continuous region along a scanline with its own coverage values.
 //
 
 use alloc::{vec, vec::Vec};
-// use std::collections::HashMap;
 
 const LAST_X: i64 = 0x7FFF_FFF0;
 
-/// Contiguous area of data
+/// Represents a contiguous area of data along a scanline.
+///
+/// A `Span` includes a starting `x` position, a `len` specifying the
+/// number of pixels covered, and a `covers` vector containing coverage
+/// values for each pixel in the span.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct Span {
-    /// Starting x position
+    /// Starting x-coordinate of the span.
     pub x: i64,
-    /// Length of span
+    /// Length of the span in pixels.
     pub len: i64,
-    /// Cover values with len values
+    /// Coverage values for each pixel in the span.
     pub covers: Vec<u64>,
 }
 
-/// Unpacked Scanline
+/// Represents an unpacked scanline for a single row of an image.
 ///
-/// Represents a single row of an image
-#[derive(Debug, Default)]
+/// `ScanlineU8` is used to store spans and manage their properties within
+/// an image row. The scanline maintains state variables to track
+/// horizontal and vertical positions, as well as a collection of spans.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct ScanlineU8 {
-    /// Last x value used
-    ///
-    /// Used as a state variable
+    /// Last x-coordinate used in the scanline, acting as a state variable.
     last_x: i64,
-    /// Minimum x position
-    ///
-    /// This value can probably be removed
+    /// Minimum x-coordinate for this scanline. This is optional.
     min_x: i64,
-    /// Collection of spans
-    pub spans: Vec<Span>,
-    // / Collection of covers
-    // / Needed ?
-    //covers: HashMap<i64, u64>,
-    /// Current y value
-    ///
-    /// State variable
+    /// Current y-coordinate for the scanline, representing the row being processed.
     pub y: i64,
+    /// Collection of spans that make up the scanline.
+    pub spans: Vec<Span>,
+    // /// Collection of covers (RETHINK: needed?)
+    // covers: HashMap<i64, u64>,
 }
 
 impl ScanlineU8 {
-    /// Create a new empty scanline
+    /// Creates a new, empty scanline with a pre-allocated capacity for spans.
+    #[inline]
     pub fn new() -> Self {
-        Self { last_x: LAST_X, min_x: 0, y: 0, spans: Vec::with_capacity(256) } //covers: HashMap::new() }
+        Self { last_x: LAST_X, min_x: 0, y: 0, spans: Vec::with_capacity(256) }
+        //covers: HashMap::new() }
     }
-    /// Reset values and clear spans
+
+    /// Resets the scanline by clearing all spans and setting the x-coordinate state variable.
+    #[inline]
     pub fn reset_spans(&mut self) {
         self.last_x = LAST_X;
         self.spans.clear();
         //self.covers.clear();
     }
+
     /// Reset values and clear spans, setting min value
+    #[inline]
     pub fn reset(&mut self, min_x: i64, _max_x: i64) {
         self.last_x = LAST_X;
         self.min_x = min_x;
         self.spans.clear();
         //self.covers = HashMap::new()
     }
-    /// Set the current row (y) that is to be worked on
+
+    /// Sets the current row (y-coordinate) to the specified value.
+    #[inline]
     pub fn finalize(&mut self, y: i64) {
         self.y = y;
     }
-    /// Total number of spans
+
+    /// Returns the total number of spans within the scanline.
+    #[inline]
+    #[must_use]
     pub fn num_spans(&self) -> usize {
         self.spans.len()
     }
-    /// Add a span starting at x, with a length and cover value
+
+    /// Adds a span to the scanline.
     ///
-    /// If the x value is 1 greater than the last value, the length of that
-    /// span is increased and the cover value appended
-    /// Otherwise, not a new span is created
+    /// Adds a span starting at `x`, with the specified `len` (length in pixels)
+    /// and `cover` (coverage value for each pixel).
+    ///
+    /// If the `x` value is contiguous with the last span, the last span's length
+    /// is increased instead of creating a new one.
     pub fn add_span(&mut self, x: i64, len: i64, cover: u64) {
         let x = x - self.min_x;
         //self.covers.insert( x, cover );
@@ -87,10 +103,11 @@ impl ScanlineU8 {
         }
         self.last_x = x + len - 1;
     }
-    /// Add a single length span, cell, with a cover value
+
+    /// Adds a single-pixel span (cell) with a specified coverage value.
     ///
-    /// If the cell is 1 beyond the last value, the length is increased and the
-    /// cover is append, otherwise a new span is created
+    /// If the new cell is contiguous with the last span, it extends that span
+    /// instead of creating a new one.
     pub fn add_cell(&mut self, x: i64, cover: u64) {
         let x = x - self.min_x;
         //self.covers.insert( x, cover );

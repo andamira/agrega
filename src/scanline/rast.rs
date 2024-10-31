@@ -1,10 +1,10 @@
-// agrega::raster
+// agrega::scanline::raster
 //
 //! Rasterizer
 
 use crate::{
-    RasterizerCell, Clip, PathCommand, Vertex, ScanlineU8,
-    VertexSource, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
+    Clip, PathCommand, RasterizerCell, ScanlineU8, Vertex, VertexSource, POLY_SUBPIXEL_SCALE,
+    POLY_SUBPIXEL_SHIFT,
 };
 use alloc::vec::Vec;
 use core::cmp::{max, min};

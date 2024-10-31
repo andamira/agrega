@@ -3,6 +3,9 @@
 use super::{Path, PathCommand, VertexSource, Vertex};
 use devela::iif;
 use core::f64::consts::PI;
+use alloc::vec::Vec;
+#[allow(unused_imports)]
+use devela::ExtFloat;
 
 /// Represents an ellipse shape with a center, radii, scale, and vertex approximation.
 #[derive(Clone, Debug, Default, PartialEq)]

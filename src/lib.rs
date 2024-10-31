@@ -89,6 +89,7 @@ pub mod all {
     pub use super::color::*;
 
     #[doc(inline)]
+    #[allow(unused_imports)]
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
     pub use super::{
         alphamask::*, base::*, clip::*, interp::*, outline::*, paths::*, pixfmt::*, stroke::*,
@@ -102,7 +103,6 @@ pub mod all {
 /// Library dependencies.<br/><hr>
 pub mod _dep {
     pub use devela;
-    #[doc(inline)]
     #[cfg(feature = "freetype")]
     pub use freetype;
 }

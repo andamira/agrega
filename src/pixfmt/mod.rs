@@ -7,6 +7,7 @@ mod alpha_blend;
 mod buffer;
 mod pixel;
 mod pixfmt;
+#[allow(unused_imports)]
 pub use {alpha_blend::*, buffer::*, pixel::*, pixfmt::*};
 
 // -----

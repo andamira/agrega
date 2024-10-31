@@ -1,32 +1,34 @@
+// agrega::scanline::rend
+//
 //! Renderer
 
 use crate::{
-    len_i64_xy, line_mr, ClipSide, Color, DrawOutline, LineParameters, Pixel, PixelSource, Pixfmt,
-    RasterizerScanline, Rectangle, Render, RenderingBase, Rgb8, Rgba8, ScanlineU8, Subpixel,
-    Transform, VertexSource, MAX_HALF_WIDTH, POLY_MR_SUBPIXEL_SHIFT, POLY_SUBPIXEL_MASK,
-    POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
+    len_i64_xy, ClipSide, Color, DistanceInterpolator4, DrawOutline, LineInterpolator,
+    LineParameters, Pixel, PixelSource, Pixfmt, RasterizerScanline, Rectangle, Render,
+    RenderingBase, Rgba8, ScanlineU8, SpanGradient, Subpixel, VertexSource, MAX_HALF_WIDTH,
+    POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
+use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
 pub(crate) const LINE_MAX_LENGTH: i64 = 1 << (POLY_SUBPIXEL_SHIFT + 10);
 
+/* pub trait Scale<T> {
+    fn upscale(v: f64)   -> T;
+    fn downscale(v: i64) -> T;
+}*/
+
 /// Aliased Renderer
 #[derive(Debug)]
-pub struct RenderingScanlineBinSolid<'a, T>
-where
-    T: 'a,
-{
+pub struct RenderingScanlineBinSolid<'a, T: 'a> {
     pub base: &'a mut RenderingBase<T>,
     pub color: Rgba8,
 }
 /// Anti-Aliased Renderer
 #[derive(Debug)]
-pub struct RenderingScanlineAASolid<'a, T>
-where
-    T: 'a,
-{
+pub struct RenderingScanlineAASolid<'a, T: 'a> {
     base: &'a mut RenderingBase<T>,
     color: Rgba8,
 }
@@ -37,130 +39,12 @@ pub struct RenderingScanlineAA<'a, T> {
     span: SpanGradient,
 }
 
-#[derive(Debug)]
-pub struct SpanGradient {
-    d1: i64,
-    d2: i64,
-    gradient: GradientX,
-    color: Vec<Rgb8>,
-    trans: Transform,
-}
-#[derive(Debug)]
-pub struct GradientX {}
-impl GradientX {
-    pub fn calculate(&self, x: i64, _: i64, _: i64) -> i64 {
-        x
-    }
-}
-
-#[derive(Debug)]
-struct Interpolator {
-    li_x: Option<LineInterpolator>,
-    li_y: Option<LineInterpolator>,
-    trans: Transform,
-}
-impl Interpolator {
-    #[inline]
-    pub fn subpixel_shift(&self) -> i64 {
-        8
-    }
-    #[inline]
-    pub fn subpixel_scale(&self) -> i64 {
-        1 << self.subpixel_shift()
-    }
-    pub fn new(trans: Transform) -> Self {
-        Self { trans, li_x: None, li_y: None }
-    }
-    pub fn begin(&mut self, x: f64, y: f64, len: usize) {
-        let tx = x;
-        let ty = y;
-        let (tx, ty) = self.trans.transform(tx, ty);
-        let x1 = (tx * self.subpixel_scale() as f64).round() as i64;
-        let y1 = (ty * self.subpixel_scale() as f64).round() as i64;
-
-        let tx = x + len as f64;
-        let ty = y;
-        let (tx, ty) = self.trans.transform(tx, ty);
-        let x2 = (tx * self.subpixel_scale() as f64).round() as i64;
-        let y2 = (ty * self.subpixel_scale() as f64).round() as i64;
-        self.li_x = Some(LineInterpolator::new(x1, x2, len as i64));
-        self.li_y = Some(LineInterpolator::new(y1, y2, len as i64));
-    }
-    pub fn inc(&mut self) {
-        if let Some(ref mut li) = self.li_x {
-            (li).inc();
-        }
-        if let Some(ref mut li) = self.li_y {
-            (li).inc();
-        }
-    }
-    pub fn coordinates(&self) -> (i64, i64) {
-        if let (Some(x), Some(y)) = (self.li_x.as_ref(), self.li_y.as_ref()) {
-            (x.y, y.y)
-        } else {
-            panic!("Interpolator not Initialized");
-        }
-    }
-}
-
-impl SpanGradient {
-    #[inline]
-    pub fn subpixel_shift(&self) -> i64 {
-        4
-    }
-    #[inline]
-    pub fn subpixel_scale(&self) -> i64 {
-        1 << self.subpixel_shift()
-    }
-    pub fn new(trans: Transform, gradient: GradientX, color: &[Rgb8], d1: f64, d2: f64) -> Self {
-        let mut s = Self { d1: 0, d2: 1, color: color.to_vec(), gradient, trans };
-        s.d1(d1);
-        s.d2(d2);
-        s
-    }
-    pub fn d1(&mut self, d1: f64) {
-        self.d1 = (d1 * self.subpixel_scale() as f64).round() as i64;
-    }
-    pub fn d2(&mut self, d2: f64) {
-        self.d2 = (d2 * self.subpixel_scale() as f64).round() as i64;
-    }
-    pub fn prepare(&mut self) {}
-    pub fn generate(&self, x: i64, y: i64, len: usize) -> Vec<Rgb8> {
-        let mut interp = Interpolator::new(self.trans);
-
-        let downscale_shift = interp.subpixel_shift() - self.subpixel_shift();
-
-        let mut dd = self.d2 - self.d1;
-        if dd < 1 {
-            dd = 1;
-        }
-        let ncolors = self.color.len() as i64;
-        let mut span = vec![Rgb8::white(); len];
-
-        interp.begin(x as f64 + 0.5, y as f64 + 0.5, len);
-
-        for item in span.iter_mut().take(len) {
-            let (x, y) = interp.coordinates();
-            let d = self.gradient.calculate(x >> downscale_shift, y >> downscale_shift, self.d2);
-            let mut d = ((d - self.d1) * ncolors) / dd;
-            if d < 0 {
-                d = 0;
-            }
-            if d >= ncolors {
-                d = ncolors - 1;
-            }
-            *item = self.color[d as usize];
-            interp.inc();
-        }
-        span
-    }
-}
-
 /// Render a single Scanline (y-row) without Anti-Aliasing (Binary?)
-fn render_scanline_bin_solid<T, C: Color>(sl: &ScanlineU8, ren: &mut RenderingBase<T>, color: C)
-where
-    T: Pixel,
-{
+fn render_scanline_bin_solid<T: Pixel, C: Color>(
+    sl: &ScanlineU8,
+    ren: &mut RenderingBase<T>,
+    color: C,
+) {
     let cover_full = 255;
     for span in &sl.spans {
         ren.blend_hline(span.x, sl.y, span.x - 1 + span.len.abs(), color, cover_full);
@@ -168,10 +52,11 @@ where
 }
 
 /// Render a single Scanline (y-row) with Anti Aliasing
-fn render_scanline_aa_solid<T, C: Color>(sl: &ScanlineU8, ren: &mut RenderingBase<T>, color: C)
-where
-    T: Pixel,
-{
+fn render_scanline_aa_solid<T: Pixel, C: Color>(
+    sl: &ScanlineU8,
+    ren: &mut RenderingBase<T>,
+    color: C,
+) {
     let y = sl.y;
     for span in &sl.spans {
         let x = span.x;
@@ -184,10 +69,11 @@ where
 }
 
 /// Render a single Scanline (y-row) with Anti-Aliasing
-fn render_scanline_aa<T>(sl: &ScanlineU8, ren: &mut RenderingBase<T>, span_gen: &SpanGradient)
-where
-    T: Pixel,
-{
+fn render_scanline_aa<T: Pixel>(
+    sl: &ScanlineU8,
+    ren: &mut RenderingBase<T>,
+    span_gen: &SpanGradient,
+) {
     let y = sl.y;
     for span in &sl.spans {
         let x = span.x;
@@ -212,11 +98,14 @@ where
     }
 }
 
-#[derive(Debug)]
+/// TODO
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct RenderData {
     sl: ScanlineU8,
 }
 impl RenderData {
+    /// TODO
+    #[inline]
     pub fn new() -> Self {
         Self { sl: ScanlineU8::new() }
     }
@@ -227,81 +116,80 @@ impl Default for RenderData {
     }
 }
 
-impl<T> Render for RenderingScanlineAASolid<'_, T>
-where
-    T: Pixel,
-{
+impl<T: Pixel> Render for RenderingScanlineAASolid<'_, T> {
     /// Render a single Scanline Row
+    #[inline]
     fn render(&mut self, data: &RenderData) {
         render_scanline_aa_solid(&data.sl, self.base, self.color);
     }
     /// Set the current color
+    #[inline]
     fn color<C: Color>(&mut self, color: C) {
         self.color = Rgba8::new(color.red8(), color.green8(), color.blue8(), color.alpha8());
     }
 }
-impl<T> Render for RenderingScanlineBinSolid<'_, T>
-where
-    T: Pixel,
-{
+impl<T: Pixel> Render for RenderingScanlineBinSolid<'_, T> {
     /// Render a single Scanline Row
+    #[inline]
     fn render(&mut self, data: &RenderData) {
         render_scanline_bin_solid(&data.sl, self.base, self.color);
     }
     /// Set the current Color
+    #[inline]
     fn color<C: Color>(&mut self, color: C) {
         self.color = Rgba8::new(color.red8(), color.green8(), color.blue8(), color.alpha8());
     }
 }
-impl<T> Render for RenderingScanlineAA<'_, T>
-where
-    T: Pixel,
-{
+impl<T: Pixel> Render for RenderingScanlineAA<'_, T> {
     /// Render a single Scanline Row
+    #[inline]
     fn render(&mut self, data: &RenderData) {
         render_scanline_aa(&data.sl, self.base, &self.span);
     }
     /// Set the current Color
+    #[inline]
     fn color<C: Color>(&mut self, _color: C) {
         unimplemented!("oops");
     }
 }
 
-impl<'a, T> RenderingScanlineBinSolid<'a, T>
-where
-    T: Pixel,
-{
+impl<'a, T: Pixel> RenderingScanlineBinSolid<'a, T> {
     /// Create a new Renderer from a Rendering Base
+    #[inline]
     pub fn with_base(base: &'a mut RenderingBase<T>) -> Self {
         let color = Rgba8::black();
         Self { base, color }
     }
+    /// TODO
+    #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.base.as_bytes()
     }
+    /// TODO
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     pub fn to_file<P: AsRef<std::path::Path>>(&self, filename: P) -> Result<(), image::ImageError> {
         self.base.to_file(filename)
     }
 }
-impl<'a, T> RenderingScanlineAA<'a, T>
-where
-    T: Pixel,
-{
+impl<'a, T: Pixel> RenderingScanlineAA<'a, T> {
+    /// TODO
+    #[inline]
     pub fn new(base: &'a mut RenderingBase<T>, span: SpanGradient) -> Self {
         Self { base, span }
     }
 }
-impl<'a, T> RenderingScanlineAASolid<'a, T>
-where
-    T: Pixel,
-{
+impl<'a, T: Pixel> RenderingScanlineAASolid<'a, T> {
     /// Create a new Renderer from a Rendering Base
+    #[inline]
     pub fn with_base(base: &'a mut RenderingBase<T>) -> Self {
         let color = Rgba8::black();
         Self { base, color }
     }
+    /// TODO
+    #[inline]
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.base.as_bytes()
     }
@@ -312,20 +200,12 @@ where
     }
 }
 
-/* pub trait Scale<T> {
-    fn upscale(v: f64)   -> T;
-    fn downscale(v: i64) -> T;
-}*/
-
 /// Render rasterized data to an image using a single color, Binary
-pub fn render_scanlines_bin_solid<C, T>(
+pub fn render_scanlines_bin_solid<C: Color, T: Pixel>(
     ras: &mut RasterizerScanline,
     ren: &mut RenderingBase<T>,
     color: C,
-) where
-    C: Color,
-    T: Pixel,
-{
+) {
     let mut sl = ScanlineU8::new();
     if ras.rewind_scanlines() {
         sl.reset(ras.min_x(), ras.max_x());
@@ -336,14 +216,11 @@ pub fn render_scanlines_bin_solid<C, T>(
 }
 
 /// Render rasterized data to an image using a single color, Anti-aliased
-pub fn render_scanlines_aa_solid<C, T>(
+pub fn render_scanlines_aa_solid<C: Color, T: Pixel>(
     ras: &mut RasterizerScanline,
     ren: &mut RenderingBase<T>,
     color: C,
-) where
-    C: Color,
-    T: Pixel,
-{
+) {
     let mut sl = ScanlineU8::new();
     if ras.rewind_scanlines() {
         sl.reset(ras.min_x(), ras.max_x());
@@ -441,124 +318,6 @@ impl BresehamInterpolator {
         self.func.inc();
         self.x1 += self.inc;
         self.y2 = self.func.y >> POLY_SUBPIXEL_SHIFT;
-    }
-}
-
-/// Line Interpolator using a Digital differential analyzer (DDA)
-///
-/// Step through a range from numbers, from `y1` to `y2`, into `count` items
-///
-/// See [https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)]()
-///
-/// This is equivalent to dda2 in the original agg
-///
-#[derive(Debug)]
-pub(crate) struct LineInterpolator {
-    /// Number of Segments
-    count: i64,
-    /// Minimum Step Size, Constant, (y2-y1)/count
-    left: i64,
-    /// Remainder, Constant, (y2-y1) % count
-    rem: i64,
-    /// Error term
-    xmod: i64,
-    /// Current y value
-    pub y: i64,
-}
-
-impl LineInterpolator {
-    /// Create a new Forward Adjust Interpolator
-    ///
-    /// Values should be in Subpixel coordinates
-    ///
-    /// Error term is initialized as: `rem` - `count`
-    ///
-    /// `xmod`, `rem` and `left` are adjusted if `xmod` is negative
-    pub fn new(y1: i64, y2: i64, count: i64) -> Self {
-        let cnt = core::cmp::max(1, count);
-        let mut left = (y2 - y1) / cnt;
-        let mut rem = (y2 - y1) % cnt;
-        let mut xmod = rem;
-        let y = y1;
-        if xmod <= 0 {
-            xmod += count;
-            rem += count;
-            left -= 1;
-        }
-        xmod -= count;
-
-        Self { y, left, rem, xmod, count: cnt }
-    }
-    pub fn adjust_forward(&mut self) {
-        self.xmod -= self.count;
-    }
-    // pub fn adjust_backward(&mut self) {
-    //     self.xmod += self.count;
-    // }
-    /// Create a Forward Adjusted Interpolator
-    pub fn new_foward_adjusted(y1: i64, y2: i64, count: i64) -> Self {
-        Self::new(y1, y2, count)
-    }
-    /// Create a Back Adjusted Interpolator
-    ///
-    /// Assumes the First point is 0
-    ///
-    /// Error term is initialied as `rem`
-    ///
-    /// `xmod`, `rem` and `left` are adjusted if `xmod` is negative
-    pub fn new_back_adjusted_2(y: i64, count: i64) -> Self {
-        let cnt = core::cmp::max(1, count);
-        let mut left = y / cnt;
-        let mut rem = y % cnt;
-        let mut xmod = rem;
-        let m_y = 0;
-
-        if xmod <= 0 {
-            xmod += count;
-            rem += count;
-            left -= 1;
-        }
-
-        Self { y: m_y, left, rem, xmod, count: cnt }
-    }
-    // pub fn new_back_adjusted_1(y1: i64, y2: i64, count: i64) -> Self {
-    //     let mut back = Self::new(y1, y2, count);
-    //     back.count += count;
-    //     back
-    // }
-    /// Increment the Interpolator
-    pub fn inc(&mut self) {
-        self.xmod += self.rem;
-        self.y += self.left;
-        if self.xmod > 0 {
-            self.xmod -= self.count;
-            self.y += 1;
-        }
-    }
-    /// Decement the Interpolator
-    pub fn dec(&mut self) {
-        if self.xmod <= self.rem {
-            self.xmod += self.count;
-            self.y -= 1;
-        }
-        self.xmod -= self.rem;
-        self.y -= self.left;
-    }
-    #[allow(dead_code)]
-    pub fn xmod(&self) -> i64 {
-        self.xmod
-    }
-    #[allow(dead_code)]
-    pub fn count(&self) -> i64 {
-        self.count
-    }
-    #[allow(dead_code)]
-    pub fn left(&self) -> i64 {
-        self.left
-    }
-    #[allow(dead_code)]
-    pub fn rem(&self) -> i64 {
-        self.rem
     }
 }
 
@@ -670,6 +429,7 @@ fn clip_move_point(
     Some((x, y))
 }
 
+/// TODO
 #[derive(Debug)]
 pub struct RendererOutlineImg<'a, T> {
     ren: &'a mut RenderingBase<T>,
@@ -678,10 +438,7 @@ pub struct RendererOutlineImg<'a, T> {
     scale_x: f64,
     clip_box: Option<Rectangle<i64>>,
 }
-impl<T> DrawOutline for RendererOutlineImg<'_, T>
-where
-    T: Pixel,
-{
+impl<T: Pixel> DrawOutline for RendererOutlineImg<'_, T> {
     fn accurate_join_only(&self) -> bool {
         true
     }
@@ -735,18 +492,12 @@ where
             self.line3_no_clip(lp, sx, sy, ex, ey);
         }
     }
-    fn semidot<F>(&mut self, _cmp: F, _xc1: i64, _yc1: i64, _xc2: i64, _yc2: i64)
-    where
-        F: Fn(i64) -> bool,
-    {
+    fn semidot<F: Fn(i64) -> bool>(&mut self, _cmp: F, _xc1: i64, _yc1: i64, _xc2: i64, _yc2: i64) {
     }
     fn pie(&mut self, _xc: i64, _y: i64, _x1: i64, _y1: i64, _x2: i64, _y2: i64) {}
 }
 
-impl<'a, T> RendererOutlineImg<'a, T>
-where
-    T: Pixel,
-{
+impl<'a, T: Pixel> RendererOutlineImg<'a, T> {
     pub fn with_base_and_pattern(
         ren: &'a mut RenderingBase<T>,
         pattern: LineImagePatternPow2,
@@ -1002,7 +753,9 @@ impl PatternFilterBilinear {
         Rgba8::new(red, green, blue, alpha)
     }
 }
-#[derive(Debug)]
+
+/// TODO
+#[derive(Clone, Debug)]
 pub struct LineInterpolatorImage {
     lp: LineParameters,
     li: LineInterpolator,
@@ -1025,23 +778,12 @@ pub struct LineInterpolatorImage {
 }
 
 impl LineInterpolatorImage {
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)] #[rustfmt::skip]
     pub fn new(
-        lp: LineParameters,
-        sx: i64,
-        sy: i64,
-        ex: i64,
-        ey: i64,
-        subpixel_width: i64,
-        pattern_start: i64,
-        pattern_width: i64,
-        scale_x: f64,
+        lp: LineParameters, sx: i64, sy: i64, ex: i64, ey: i64,
+        subpixel_width: i64, pattern_start: i64, pattern_width: i64, scale_x: f64,
     ) -> Self {
-        let n = if lp.vertical {
-            (lp.y2 - lp.y1).abs()
-        } else {
-            (lp.x2 - lp.x1).abs() + 1
-        };
+        let n = iif![lp.vertical; (lp.y2 - lp.y1).abs(); (lp.x2 - lp.x1).abs() + 1];
         let y1 = if lp.vertical {
             (lp.x2 - lp.x1) << POLY_SUBPIXEL_SHIFT
         } else {
@@ -1050,8 +792,7 @@ impl LineInterpolatorImage {
         let mut m_li = LineInterpolator::new_back_adjusted_2(y1, n);
         let mut x = lp.x1 >> POLY_SUBPIXEL_SHIFT;
         let mut y = lp.y1 >> POLY_SUBPIXEL_SHIFT;
-        let mut old_x = x;
-        let mut old_y = y;
+        let (mut old_x, mut old_y) = (x, y);
         let count = if lp.vertical {
             ((lp.y2 >> POLY_SUBPIXEL_SHIFT) - y).abs()
         } else {
@@ -1064,18 +805,8 @@ impl LineInterpolatorImage {
         let mut dist_pos = vec![0i64; MAX_HALF_WIDTH + 1];
         let colors = vec![Rgba8::black(); MAX_HALF_WIDTH * 2 + 4];
         let mut di = DistanceInterpolator4::new(
-            lp.x1,
-            lp.y1,
-            lp.x2,
-            lp.y2,
-            sx,
-            sy,
-            ex,
-            ey,
-            lp.len,
-            scale_x,
-            lp.x1 & !POLY_SUBPIXEL_MASK,
-            lp.y1 & !POLY_SUBPIXEL_MASK,
+            lp.x1, lp.y1, lp.x2, lp.y2, sx, sy, ex, ey, lp.len, scale_x,
+            lp.x1 & !POLY_SUBPIXEL_MASK, lp.y1 & !POLY_SUBPIXEL_MASK,
         );
         let dd = if lp.vertical {
             lp.dy << POLY_SUBPIXEL_SHIFT
@@ -1087,26 +818,19 @@ impl LineInterpolatorImage {
         let stop = width + POLY_SUBPIXEL_SCALE * 2;
         for item in dist_pos.iter_mut().take(MAX_HALF_WIDTH) {
             *item = li.y;
-            if *item >= stop {
-                break;
-            }
+            iif![*item >= stop; break];
             li.inc();
         }
         dist_pos[MAX_HALF_WIDTH] = 0x7FFF_0000;
 
         let mut npix = 1;
-
         if lp.vertical {
             loop {
                 m_li.dec();
                 y -= lp.inc;
                 x = (lp.x1 + m_li.y) >> POLY_SUBPIXEL_SHIFT;
 
-                if lp.inc > 0 {
-                    di.dec_y_by(x - old_x);
-                } else {
-                    di.inc_y_by(x - old_x);
-                }
+                iif![lp.inc > 0; di.dec_y_by(x - old_x); di.inc_y_by(x - old_x)];
 
                 old_x = x;
 
@@ -1114,32 +838,19 @@ impl LineInterpolatorImage {
                 let mut dist2_start = di.dist_start;
 
                 let mut dx = 0;
-                if dist1_start < 0 {
-                    npix += 1;
-                }
+                iif![dist1_start < 0; npix += 1];
                 loop {
                     dist1_start += di.dy_start;
                     dist2_start -= di.dy_start;
-                    if dist1_start < 0 {
-                        npix += 1;
-                    }
-                    if dist2_start < 0 {
-                        npix += 1;
-                    }
+                    iif![dist1_start < 0; npix += 1];
+                    iif![dist2_start < 0; npix += 1];
                     dx += 1;
-                    if dist_pos[dx] > width {
-                        break;
-                    }
+                    iif![dist_pos[dx] > width; break];
                 }
-                if npix == 0 {
-                    break;
-                }
-
+                iif![npix == 0; break];
                 npix = 0;
                 step -= 1;
-                if step < -max_extent {
-                    break;
-                }
+                iif![step < -max_extent; break];
             }
         } else {
             loop {
@@ -1148,73 +859,44 @@ impl LineInterpolatorImage {
                 x -= lp.inc;
                 y = (lp.y1 + m_li.y) >> POLY_SUBPIXEL_SHIFT;
 
-                if lp.inc > 0 {
-                    di.dec_x_by(y - old_y);
-                } else {
-                    di.inc_x_by(y - old_y);
-                }
-
+                iif![lp.inc > 0; di.dec_x_by(y - old_y); di.inc_x_by(y - old_y)];
                 old_y = y;
 
                 let mut dist1_start = di.dist_start;
                 let mut dist2_start = di.dist_start;
 
                 let mut dy = 0;
-                if dist1_start < 0 {
-                    npix += 1;
-                }
+                iif![dist1_start < 0; npix += 1];
                 loop {
                     dist1_start -= di.dx_start;
                     dist2_start += di.dx_start;
-                    if dist1_start < 0 {
-                        npix += 1;
-                    }
-                    if dist2_start < 0 {
-                        npix += 1;
-                    }
+                    iif![dist1_start < 0; npix += 1];
+                    iif![dist2_start < 0; npix += 1];
                     dy += 1;
-                    if dist_pos[dy] > width {
-                        break;
-                    }
+                    iif![dist_pos[dy] > width; break];
                 }
-                if npix == 0 {
-                    break;
-                }
-
+                iif![npix == 0; break];
                 npix = 0;
                 step -= 1;
-                if step < -max_extent {
-                    break;
-                }
+                iif![step < -max_extent; break];
             }
         }
         m_li.adjust_forward();
         step -= max_extent;
 
         Self {
-            lp,
-            x,
-            y,
-            old_x,
-            old_y,
-            count,
-            width,
-            max_extent,
-            step,
-            dist_pos,
-            colors,
-            di,
-            start,
-            li: m_li,
+            lp, x, y, old_x, old_y, count, width, max_extent,
+            step, dist_pos, colors, di, start, li: m_li,
         }
     }
-    fn vertical(&self) -> bool {
+
+    #[inline]
+    #[must_use]
+    const fn vertical(&self) -> bool {
         self.lp.vertical
     }
-    fn step_ver<T>(&mut self, ren: &mut RendererOutlineImg<T>) -> bool
-    where
-        T: Pixel,
-    {
+
+    fn step_ver<T: Pixel>(&mut self, ren: &mut RendererOutlineImg<T>) -> bool {
         self.li.inc();
         self.y += self.lp.inc;
         self.x = (self.lp.x1 + self.li.y) >> POLY_SUBPIXEL_SHIFT;
@@ -1386,244 +1068,5 @@ impl LineInterpolatorImage {
         );
         self.step += 1;
         npix != 0 && self.step < self.count
-    }
-}
-#[derive(Debug)]
-struct DistanceInterpolator4 {
-    dx: i64,
-    dy: i64,
-    dx_start: i64,
-    dy_start: i64,
-    dx_pict: i64,
-    dy_pict: i64,
-    dx_end: i64,
-    dy_end: i64,
-    dist: i64,
-    dist_start: i64,
-    dist_pict: i64,
-    dist_end: i64,
-    #[allow(dead_code)]
-    len: i64,
-}
-
-impl DistanceInterpolator4 {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        x1: i64,
-        y1: i64,
-        x2: i64,
-        y2: i64,
-        sx: i64,
-        sy: i64,
-        ex: i64,
-        ey: i64,
-        len: i64,
-        scale: f64,
-        x: i64,
-        y: i64,
-    ) -> Self {
-        let dx = x2 - x1;
-        let dy = y2 - y1;
-        let dx_start = line_mr(sx) - line_mr(x1);
-        let dy_start = line_mr(sy) - line_mr(y1);
-        let dx_end = line_mr(ex) - line_mr(x2);
-        let dy_end = line_mr(ey) - line_mr(y2);
-
-        let dist = ((x + POLY_SUBPIXEL_SCALE / 2 - x2) as f64 * dy as f64
-            - (y + POLY_SUBPIXEL_SCALE / 2 - y2) as f64 * dx as f64)
-            .round() as i64;
-
-        let dist_start = (line_mr(x + POLY_SUBPIXEL_SCALE / 2) - line_mr(sx)) * dy_start
-            - (line_mr(y + POLY_SUBPIXEL_SCALE / 2) - line_mr(sy)) * dx_start;
-        let dist_end = (line_mr(x + POLY_SUBPIXEL_SCALE / 2) - line_mr(ex)) * dy_end
-            - (line_mr(y + POLY_SUBPIXEL_SCALE / 2) - line_mr(ey)) * dx_end;
-        let len = (len as f64 / scale).round() as i64;
-        let d = len as f64 * scale;
-        let tdx = (((x2 - x1) << POLY_SUBPIXEL_SHIFT) as f64 / d).round() as i64;
-        let tdy = (((y2 - y1) << POLY_SUBPIXEL_SHIFT) as f64 / d).round() as i64;
-        let dx_pict = -tdy;
-        let dy_pict = tdx;
-        let dist_pict = ((x + POLY_SUBPIXEL_SCALE / 2 - (x1 - tdy)) * dy_pict
-            - (y + POLY_SUBPIXEL_SCALE / 2 - (y1 + tdx)) * dx_pict)
-            >> POLY_SUBPIXEL_SHIFT;
-        let dx = dx << POLY_SUBPIXEL_SHIFT;
-        let dy = dy << POLY_SUBPIXEL_SHIFT;
-        let dx_start = dx_start << POLY_MR_SUBPIXEL_SHIFT;
-        let dy_start = dy_start << POLY_MR_SUBPIXEL_SHIFT;
-        let dx_end = dx_end << POLY_MR_SUBPIXEL_SHIFT;
-        let dy_end = dy_end << POLY_MR_SUBPIXEL_SHIFT;
-
-        Self {
-            dx,
-            dy,
-            dx_start,
-            dx_end,
-            dy_start,
-            dy_end,
-            dx_pict,
-            dy_pict,
-            dist,
-            dist_pict,
-            dist_start,
-            dist_end,
-            len,
-        }
-    }
-    // pub fn inc_x(&mut self) {
-    //     self.dist += self.dy;
-    //     self.dist_start += self.dy_start;
-    //     self.dist_pict += self.dy_pict;
-    //     self.dist_end += self.dy_end;
-    // }
-    // pub fn dec_x(&mut self) {
-    //     self.dist -= self.dy;
-    //     self.dist_start -= self.dy_start;
-    //     self.dist_pict -= self.dy_pict;
-    //     self.dist_end -= self.dy_end;
-    // }
-    // pub fn inc_y(&mut self) {
-    //     self.dist -= self.dx;
-    //     self.dist_start -= self.dx_start;
-    //     self.dist_pict -= self.dx_pict;
-    //     self.dist_end -= self.dx_end;
-    // }
-    // pub fn dec_y(&mut self) {
-    //     self.dist += self.dx;
-    //     self.dist_start += self.dx_start;
-    //     self.dist_pict += self.dx_pict;
-    //     self.dist_end += self.dx_end;
-    // }
-    pub fn inc_x_by(&mut self, dy: i64) {
-        self.dist += self.dy;
-        self.dist_start += self.dy_start;
-        self.dist_pict += self.dy_pict;
-        self.dist_end += self.dy_end;
-        if dy > 0 {
-            self.dist -= self.dx;
-            self.dist_start -= self.dx_start;
-            self.dist_pict -= self.dx_pict;
-            self.dist_end -= self.dx_end;
-        }
-        if dy < 0 {
-            self.dist += self.dx;
-            self.dist_start += self.dx_start;
-            self.dist_pict += self.dx_pict;
-            self.dist_end += self.dx_end;
-        }
-    }
-    pub fn dec_x_by(&mut self, dy: i64) {
-        self.dist -= self.dy;
-        self.dist_start -= self.dy_start;
-        self.dist_pict -= self.dy_pict;
-        self.dist_end -= self.dy_end;
-        if dy > 0 {
-            self.dist -= self.dx;
-            self.dist_start -= self.dx_start;
-            self.dist_pict -= self.dx_pict;
-            self.dist_end -= self.dx_end;
-        }
-        if dy < 0 {
-            self.dist += self.dx;
-            self.dist_start += self.dx_start;
-            self.dist_pict += self.dx_pict;
-            self.dist_end += self.dx_end;
-        }
-    }
-    pub fn inc_y_by(&mut self, dx: i64) {
-        self.dist -= self.dx;
-        self.dist_start -= self.dx_start;
-        self.dist_pict -= self.dx_pict;
-        self.dist_end -= self.dx_end;
-        if dx > 0 {
-            self.dist += self.dy;
-            self.dist_start += self.dy_start;
-            self.dist_pict += self.dy_pict;
-            self.dist_end += self.dy_end;
-        }
-        if dx < 0 {
-            self.dist -= self.dy;
-            self.dist_start -= self.dy_start;
-            self.dist_pict -= self.dy_pict;
-            self.dist_end -= self.dy_end;
-        }
-    }
-    pub fn dec_y_by(&mut self, dx: i64) {
-        self.dist += self.dx;
-        self.dist_start += self.dx_start;
-        self.dist_pict += self.dx_pict;
-        self.dist_end += self.dx_end;
-        if dx > 0 {
-            self.dist += self.dy;
-            self.dist_start += self.dy_start;
-            self.dist_pict += self.dy_pict;
-            self.dist_end += self.dy_end;
-        }
-        if dx < 0 {
-            self.dist -= self.dy;
-            self.dist_start -= self.dy_start;
-            self.dist_pict -= self.dy_pict;
-            self.dist_end -= self.dy_end;
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::LineInterpolator;
-    use alloc::vec;
-
-    #[test]
-    fn line_interpolator() {
-        let mut lp = LineInterpolator::new(0 << 8, 10 << 8, 10 << 8);
-        for i in 0..=10 {
-            assert_eq!(lp.y, i);
-            lp.inc();
-        }
-        let mut lp = LineInterpolator::new(0, 100, 2);
-        for &i in [0, 50, 100, 150].iter() {
-            assert_eq!(lp.y, i);
-            lp.inc();
-        }
-        let mut lp = LineInterpolator::new(0, 10, 3);
-        let y0 = vec![0, 3, 6, 10];
-        let left0 = vec![3, 3, 3, 3];
-        let xmod0 = vec![-2, -1, 0, -2];
-        let rem0 = vec![1, 1, 1, 1];
-        let mut left = vec![];
-        let mut xmod = vec![];
-        let mut rem = vec![];
-        let mut y = vec![];
-        for _ in 0..4 {
-            left.push(lp.left());
-            y.push(lp.y);
-            xmod.push(lp.xmod());
-            rem.push(lp.rem());
-            lp.inc();
-        }
-        assert_eq!(left0, left);
-        assert_eq!(xmod0, xmod);
-        assert_eq!(rem0, rem);
-        assert_eq!(y0, y);
-
-        let mut lp = LineInterpolator::new(0, 10, 4);
-        let y0 = vec![0, 2, 5, 7, 10];
-        let left0 = vec![2, 2, 2, 2, 2];
-        let xmod0 = vec![-2, 0, -2, 0, -2];
-        let rem0 = vec![2, 2, 2, 2, 2];
-        let mut left = vec![];
-        let mut xmod = vec![];
-        let mut rem = vec![];
-        let mut y = vec![];
-        for _ in 0..5 {
-            left.push(lp.left());
-            y.push(lp.y);
-            xmod.push(lp.xmod());
-            rem.push(lp.rem());
-            lp.inc();
-        }
-        assert_eq!(left0, left);
-        assert_eq!(xmod0, xmod);
-        assert_eq!(rem0, rem);
-        assert_eq!(y0, y);
     }
 }

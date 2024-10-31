@@ -1,110 +1,118 @@
-// agrega::interp::line
+// agrega::interp::line_impls
 //
-// - definitions
-//   - LineInterpolatorAA
-//   - AA0
-//   - AA1
-//   - AA2
-//   - AA3
-//   - DrawVars
-// - implementations
-//   - LineInterpolatorAA
-//   - AA0
-//   - AA1
-//   - AA2
-//   - AA3
+//! Line interpolation, implementations.
+//
+// - LineInterpolator
+// - LineInterpolatorAA
+// - AA0
+// - AA1
+// - AA2
+// - AA3
 
 use super::{
     DistanceInterpolator, DistanceInterpolator1, DistanceInterpolator2, DistanceInterpolator3,
-    LineParameters,
+    LineInterpolator, LineInterpolatorAA, LineParameters, AA0, AA1, AA2, AA3,
 };
-use crate::{LineInterpolator, util::*, RenderOutline};
-use alloc::{vec, vec::Vec};
+use crate::{util::*, RenderOutline};
+use alloc::vec;
+use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
-/* definitions */
+impl LineInterpolator {
+    /// Create a new Forward Adjust Interpolator
+    ///
+    /// Values should be in Subpixel coordinates
+    ///
+    /// Error term is initialized as: `rem` - `count`
+    ///
+    /// `xmod`, `rem` and `left` are adjusted if `xmod` is negative
+    pub fn new(y1: i64, y2: i64, count: i64) -> Self {
+        let cnt = core::cmp::max(1, count);
+        let mut left = (y2 - y1) / cnt;
+        let mut rem = (y2 - y1) % cnt;
+        let mut xmod = rem;
+        let y = y1;
+        iif![xmod <= 0; { xmod += count; rem += count; left -= 1 }];
+        xmod -= count;
+        Self { y, left, rem, xmod, count: cnt }
+    }
 
-/// Line Interpolator AA
-#[derive(Debug)]
-pub(crate) struct LineInterpolatorAA {
-    /// Line Parameters
-    lp: LineParameters,
-    /// Line Interpolator
-    li: LineInterpolator,
-    /// Length of Line
-    len: i64,
-    /// Current x position of line in pixels
-    x: i64,
-    /// Current y position of line in pixels
-    y: i64,
-    /// Previous x position in pixels
-    old_x: i64,
-    /// Previous y position in pixels
-    old_y: i64,
-    /// Number of pixels from start to end points
-    ///  in either the `y` or `x` direction
-    count: i64,
-    /// Width of line in subpixels width
-    width: i64,
-    /// Maximum width of line in pixels
-    max_extent: i64,
+    /// TODO
+    #[inline]
+    pub fn adjust_forward(&mut self) {
+        self.xmod -= self.count;
+    }
+    // pub fn adjust_backward(&mut self) {
+    //     self.xmod += self.count;
+    // }
 
-    step: i64,
-    //pub dist: [i64; MAX_HALF_WIDTH + 1],
-    dist: Vec<i64>,
-    //pub covers: [u64; MAX_HALF_WIDTH * 2 + 4],
-    covers: Vec<u64>,
-}
+    /// Create a Forward Adjusted Interpolator
+    pub fn new_foward_adjusted(y1: i64, y2: i64, count: i64) -> Self {
+        Self::new(y1, y2, count)
+    }
 
-//
-#[derive(Debug)]
-pub(crate) struct AA3 {
-    di: DistanceInterpolator3,
-    li: LineInterpolatorAA,
-}
+    /// Create a Back Adjusted Interpolator
+    ///
+    /// Assumes the First point is 0
+    ///
+    /// Error term is initialied as `rem`
+    ///
+    /// `xmod`, `rem` and `left` are adjusted if `xmod` is negative
+    pub fn new_back_adjusted_2(y: i64, count: i64) -> Self {
+        let cnt = core::cmp::max(1, count);
+        let mut left = y / cnt;
+        let mut rem = y % cnt;
+        let mut xmod = rem;
+        let m_y = 0;
 
-/// Line Interpolator0
-#[derive(Debug)]
-pub(crate) struct AA0 {
-    /// Distance Interpolator v1
-    di: DistanceInterpolator1,
-    /// Line Interpolator AA-version
-    li: LineInterpolatorAA,
-}
-//
-#[derive(Debug)]
-pub(crate) struct AA1 {
-    di: DistanceInterpolator2,
-    li: LineInterpolatorAA,
-}
-//
-#[derive(Debug)]
-pub(crate) struct AA2 {
-    di: DistanceInterpolator2,
-    li: LineInterpolatorAA,
-}
+        if xmod <= 0 {
+            xmod += count;
+            rem += count;
+            left -= 1;
+        }
 
-//
-#[derive(Debug, Default)]
-pub(crate) struct DrawVars {
-    pub idx: usize,
-    pub x1: i64,
-    pub y1: i64,
-    pub x2: i64,
-    pub y2: i64,
-    pub curr: LineParameters,
-    pub next: LineParameters,
-    pub lcurr: i64,
-    pub lnext: i64,
-    pub xb1: i64,
-    pub yb1: i64,
-    pub xb2: i64,
-    pub yb2: i64,
-    pub flags: u8,
-}
+        Self { y: m_y, left, rem, xmod, count: cnt }
+    }
 
-/* implementations */
+    // #[inline]
+    // pub fn new_back_adjusted_1(y1: i64, y2: i64, count: i64) -> Self {
+    //     let mut back = Self::new(y1, y2, count);
+    //     back.count += count;
+    //     back
+    // }
+
+    /// Increment the Interpolator
+    #[inline]
+    pub fn inc(&mut self) {
+        self.xmod += self.rem;
+        self.y += self.left;
+        if self.xmod > 0 {
+            self.xmod -= self.count;
+            self.y += 1;
+        }
+    }
+    /// Decement the Interpolator
+    #[inline]
+    pub fn dec(&mut self) {
+        if self.xmod <= self.rem {
+            self.xmod += self.count;
+            self.y -= 1;
+        }
+        self.xmod -= self.rem;
+        self.y -= self.left;
+    }
+
+    // used in tests:
+    #[inline] #[must_use] #[rustfmt::skip] #[allow(dead_code)]
+    pub const fn xmod(&self) -> i64 { self.xmod }
+    #[inline] #[must_use] #[rustfmt::skip] #[allow(dead_code)]
+    pub const fn count(&self) -> i64 { self.count }
+    #[inline] #[must_use] #[rustfmt::skip] #[allow(dead_code)]
+    pub const fn left(&self) -> i64 { self.left }
+    #[inline] #[must_use] #[rustfmt::skip] #[allow(dead_code)]
+    pub const fn rem(&self) -> i64 { self.rem }
+}
 
 impl LineInterpolatorAA {
     /// Create new Line Interpolator AA
@@ -217,34 +225,30 @@ impl LineInterpolatorAA {
 
 impl AA0 {
     /// Create a new Line Interpolator-0
+    #[rustfmt::skip]
     pub fn new(lp: LineParameters, subpixel_width: i64) -> Self {
         let mut li = LineInterpolatorAA::new(lp, subpixel_width);
         li.li.adjust_forward();
         Self {
-            li,
-            di: DistanceInterpolator1::new(
-                lp.x1,
-                lp.y1,
-                lp.x2,
-                lp.y2,
-                lp.x1 & !POLY_SUBPIXEL_MASK,
-                lp.y1 & !POLY_SUBPIXEL_MASK,
-            ),
+            li, di: DistanceInterpolator1::new(lp.x1, lp.y1, lp.x2, lp.y2,
+            lp.x1 & !POLY_SUBPIXEL_MASK, lp.y1 & !POLY_SUBPIXEL_MASK),
         }
     }
     /// Size of the Interpolation
+    #[inline]
+    #[must_use]
     pub fn count(&self) -> i64 {
         self.li.count
     }
     /// Return if the line is more Vertical than horizontal
+    #[inline]
+    #[must_use]
     pub fn vertical(&self) -> bool {
         self.li.lp.vertical
     }
+
     /// Conduct a horizontal step, used for "horizontal lines"
-    pub fn step_hor<R>(&mut self, ren: &mut R) -> bool
-    where
-        R: RenderOutline,
-    {
+    pub fn step_hor<R: RenderOutline>(&mut self, ren: &mut R) -> bool {
         // Step the Interpolator horizontally and get the width
         //   projected onto the vertical
         let s1 = self.li.step_hor_base(&mut self.di);
@@ -320,18 +324,12 @@ impl AA0 {
 }
 
 impl AA1 {
+    #[rustfmt::skip]
     pub fn new(lp: LineParameters, sx: i64, sy: i64, subpixel_width: i64) -> Self {
         let mut li = LineInterpolatorAA::new(lp, subpixel_width);
         let mut di = DistanceInterpolator2::new(
-            lp.x1,
-            lp.y1,
-            lp.x2,
-            lp.y2,
-            sx,
-            sy,
-            lp.x1 & !POLY_SUBPIXEL_MASK,
-            lp.y1 & !POLY_SUBPIXEL_MASK,
-            true,
+            lp.x1, lp.y1, lp.x2, lp.y2, sx, sy,
+            lp.x1 & !POLY_SUBPIXEL_MASK, lp.y1 & !POLY_SUBPIXEL_MASK, true,
         );
         let mut npix = 1;
         if lp.vertical {
@@ -351,31 +349,21 @@ impl AA1 {
                 let mut dist2_start = di.dist_start;
 
                 let mut dx = 0;
-                if dist1_start < 0 {
-                    npix += 1;
-                }
+                iif![dist1_start < 0; npix += 1];
                 loop {
                     dist1_start += di.dy_start;
                     dist2_start -= di.dy_start;
                     if dist1_start < 0 {
                         npix += 1;
                     }
-                    if dist2_start < 0 {
-                        npix += 1
-                    }
+                    iif![dist2_start < 0; npix += 1];
                     dx += 1;
-                    if li.dist[dx] > li.width {
-                        break;
-                    }
+                    iif![li.dist[dx] > li.width; break];
                 }
                 li.step -= 1;
-                if npix == 0 {
-                    break;
-                }
+                iif![npix == 0; break];
                 npix = 0;
-                if li.step < -li.max_extent {
-                    break;
-                }
+                iif![li.step < -li.max_extent; break];
             }
         } else {
             loop {

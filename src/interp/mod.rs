@@ -1,64 +1,73 @@
 // agrega::interp
 
-use crate::{LineInterpolatorImage, util::*};
+use crate::{util::*, LineInterpolatorImage, Transform};
+use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
 #[cfg(test)]
 mod tests;
 
-mod distance;
-mod line;
-pub(crate) use {distance::*, line::*};
+mod dist_defs;
+mod dist_impls;
+mod line_defs;
+mod line_impls;
+#[allow(unused_imports)]
+pub use {dist_defs::*, line_defs::*};
 
-/// Line Parameters.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct LineParameters {
-    /// Starting x position
-    pub x1: i64,
-    /// Starting y position
-    pub y1: i64,
-    /// Ending x position
-    pub x2: i64,
-    /// Ending y position
-    pub y2: i64,
-    /// Distance from x1 to x2
-    pub dx: i64,
-    /// Distance from y1 to y2
-    pub dy: i64,
-    /// Direction of the x coordinate (positive or negative)
-    pub sx: i64,
-    /// Direction of the y coordinate (positive or negative)
-    pub sy: i64,
-    /// If line is more vertical than horizontal
-    pub vertical: bool,
-    /// Increment of the line, `sy` if vertical, else `sx`
-    pub inc: i64,
-    /// Length of the line
-    pub len: i64,
-    /// Identifier of which direction the line is headed
-    ///   bit 1 - vertical
-    ///   bit 2 - sx < 0
-    ///   bit 3 - sy < 0
-    ///  bits - V? | sx | sy | value | diag quadrant
-    ///   000 - H    +    +     0         0
-    ///   100 - V    +    +     1         1
-    ///   010 - H    -    +     2         2
-    ///   110 - V    -    +     3         1
-    ///   001 - H    +    -     4         0
-    ///   101 - V    +    -     5         3
-    ///   011 - H    -    -     6         2
-    ///   111 - V    -    -     7         3
-    ///             1 <- diagonal quadrant
-    ///        .  3 | 1  .
-    ///          .  |  .
-    ///       2    .|.   0 <- octant
-    ///     2 ------+------ 0
-    ///       6    .|.   4
-    ///          .  |  .
-    ///        .  7 | 5  .
-    ///             3
-    pub octant: usize,
+/// TODO
+#[must_use]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Interpolator {
+    li_x: Option<LineInterpolator>,
+    li_y: Option<LineInterpolator>,
+    trans: Transform,
+}
+impl Interpolator {
+    /// TODO
+    #[inline]
+    pub const fn new(trans: Transform) -> Self {
+        Self { trans, li_x: None, li_y: None }
+    }
+
+    /// TODO
+    #[inline] #[must_use] #[rustfmt::skip]
+    pub const fn subpixel_shift(&self) -> i64 { 8 }
+
+    /// TODO
+    #[inline] #[must_use] #[rustfmt::skip]
+    pub const fn subpixel_scale(&self) -> i64 { 1 << self.subpixel_shift() }
+
+    /// TODO
+    pub fn begin(&mut self, x: f64, y: f64, len: usize) {
+        let (tx, ty) = self.trans.transform(x, y);
+        let x1 = (tx * self.subpixel_scale() as f64).round() as i64;
+        let y1 = (ty * self.subpixel_scale() as f64).round() as i64;
+
+        let (tx, ty) = self.trans.transform(x + len as f64, y);
+        let x2 = (tx * self.subpixel_scale() as f64).round() as i64;
+        let y2 = (ty * self.subpixel_scale() as f64).round() as i64;
+        self.li_x = Some(LineInterpolator::new(x1, x2, len as i64));
+        self.li_y = Some(LineInterpolator::new(y1, y2, len as i64));
+    }
+
+    /// TODO
+    #[inline]
+    pub fn inc(&mut self) {
+        iif![let Some(ref mut li) = self.li_x; (li).inc()];
+        iif![let Some(ref mut li) = self.li_y; (li).inc()];
+    }
+
+    // TODO
+    #[inline]
+    #[must_use]
+    pub const fn coordinates(&self) -> (i64, i64) {
+        if let (Some(x), Some(y)) = (self.li_x.as_ref(), self.li_y.as_ref()) {
+            (x.y, y.y)
+        } else {
+            panic!("Interpolator not Initialized");
+        }
+    }
 }
 
 impl LineParameters {

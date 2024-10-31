@@ -39,7 +39,8 @@ pub use scan::*;
 
 #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
 items! {
+    mod gradient;
     mod rast;
     mod rend;
-    pub use {rast::*, rend::*};
+    pub use {gradient::*, rast::*, rend::*};
 }

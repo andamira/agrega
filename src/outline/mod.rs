@@ -58,13 +58,14 @@
 //! # #[cfg(feature = "std")]
 //! ren_base.to_file("tests/std/tmp/outline_aa.png").unwrap();
 //! ```
+
 mod aa_rast;
 mod aa_rend;
 mod rast;
 mod rend;
 pub use {aa_rast::*, aa_rend::*, rast::*, rend::*};
 
-/* */
+use crate::{Color, LineParameters};
 
 /// Represents a coordinate with subpixel precision, stored as a fixed-point integer.
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
@@ -83,4 +84,33 @@ impl From<Subpixel> for i64 {
     /// Converts a `Subpixel` to an `i64`.
     #[inline] #[rustfmt::skip]
     fn from(v: Subpixel) -> Self { v.0 >> crate::util::POLY_SUBPIXEL_SHIFT }
+}
+
+/// Functions for Drawing Outlines.
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg_attr(
+    feature = "nightly",
+    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
+)]
+// pub trait DrawOutline: Lines + AccurateJoins + SetColor {} // MAYBE
+pub trait DrawOutline {
+    /// Set the current Color
+    fn color<C: Color>(&mut self, color: C);
+    /// If Line Joins are Accurate
+    fn accurate_join_only(&self) -> bool;
+    fn line0(&mut self, lp: &LineParameters);
+    fn line1(&mut self, lp: &LineParameters, sx: i64, sy: i64);
+    fn line2(&mut self, lp: &LineParameters, ex: i64, ey: i64);
+    fn line3(&mut self, lp: &LineParameters, sx: i64, sy: i64, ex: i64, ey: i64);
+    fn semidot<F>(&mut self, cmp: F, xc1: i64, yc1: i64, xc2: i64, yc2: i64)
+    where
+        F: Fn(i64) -> bool;
+    fn pie(&mut self, xc: i64, y: i64, x1: i64, y1: i64, x2: i64, y2: i64);
+}
+
+/// TODO
+pub(crate) trait RenderOutline {
+    fn cover(&self, d: i64) -> u64;
+    fn blend_solid_hspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
+    fn blend_solid_vspan(&mut self, x: i64, y: i64, len: i64, covers: &[u64]);
 }

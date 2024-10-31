@@ -1,152 +1,41 @@
-// agrega::interp::distance
+// agrega::interp::dist_impls
 //
-// - definitions
-//   - fn line_mr
-//   - trait DistanceInterpolator
-//   - struct DistanceInterpolator00
-//   - struct DistanceInterpolator0
-//   - struct DistanceInterpolator1
-//   - struct DistanceInterpolator2
-//   - struct DistanceInterpolator3
-// - struct implementations
-// - trait implementations
+//! Distance interpolation, implementations.
+//
+// TOC
+// - trait DistanceInterpolator
+// - struct DistanceInterpolator00
+// - struct DistanceInterpolator0
+// - struct DistanceInterpolator1
+// - struct DistanceInterpolator2
+// - struct DistanceInterpolator3
+// - struct DistanceInterpolator4
 
+use super::{
+    line_mr, DistanceInterpolator, DistanceInterpolator0, DistanceInterpolator00,
+    DistanceInterpolator1, DistanceInterpolator2, DistanceInterpolator3, DistanceInterpolator4,
+};
 use crate::util::*;
+use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
-/* definitions */
-
-/// Converts a coordinate from full subpixel precision to mid-range subpixel precision.
-///
-/// This function shifts the input coordinate `x` from a high-precision subpixel scale
-/// (defined by `POLY_SUBPIXEL_SHIFT`) down to a mid-range subpixel scale
-/// (defined by `POLY_MR_SUBPIXEL_SHIFT`).
-#[inline]
-#[must_use]
-pub(crate) const fn line_mr(x: i64) -> i64 {
-    x >> (POLY_SUBPIXEL_SHIFT - POLY_MR_SUBPIXEL_SHIFT)
+macro_rules! impl_distance_interp {
+    ($($t:ty),+) => { $( impl_distance_interp!(@$t); )+ };
+    (@$t:ty) => { impl DistanceInterpolator for $t {
+        #[inline] fn dist(&self) -> i64 { self.dist }
+        #[inline] fn inc_x(&mut self, dy: i64) { self.inc_x_by(dy) }
+        #[inline] fn dec_x(&mut self, dy: i64) { self.dec_x_by(dy) }
+        #[inline] fn inc_y(&mut self, dx: i64) { self.inc_y_by(dx) }
+        #[inline] fn dec_y(&mut self, dx: i64) { self.dec_y_by(dx) }
+    }};
 }
-
-/// Common trait for distance interpolators.
-///
-/// Defines a set of methods for manipulating distance values in interpolation
-/// processes used for rendering. Each interpolator has its own behavior for
-/// incrementing and decrementing distances based on x or y deltas.
-pub(crate) trait DistanceInterpolator {
-    /// Returns the current distance.
-    #[must_use]
-    fn dist(&self) -> i64;
-    /// Increments the x-distance by `dy`.
-    fn inc_x(&mut self, dy: i64);
-    /// Increments the y-distance by `dx`.
-    fn inc_y(&mut self, dx: i64);
-    /// Decrements the x-distance by `dy`.
-    fn dec_x(&mut self, dy: i64);
-    /// Decrements the y-distance by `dx`.
-    fn dec_y(&mut self, dx: i64);
-}
-
-/// Distance Interpolator v00.
-///
-/// A basic interpolator version that stores two distance pairs `(dx1, dy1)`
-/// and `(dx2, dy2)` and their associated distances `dist1` and `dist2`.
-/// Useful for scenarios where two distinct distance metrics are tracked.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct DistanceInterpolator00 {
-    /// X distance in subpixel coordinates to point 1.
-    pub dx1: i64,
-    /// Y distance in subpixel coordinates to point 1.
-    pub dy1: i64,
-    /// X distance in subpixel coordinates to point 2.
-    pub dx2: i64,
-    /// Y distance in subpixel coordinates to point 2.
-    pub dy2: i64,
-    /// Distance from point 1.
-    pub dist1: i64,
-    /// Distance from point 2.
-    pub dist2: i64,
-}
-/// Distance Interpolator v0.
-///
-/// Simplified interpolator holding a single distance vector `(dx, dy)`
-/// and a single distance measurement `dist`. Used when only one primary
-/// distance needs tracking.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct DistanceInterpolator0 {
-    /// X distance in subpixel coordinates
-    pub dx: i64,
-    /// Y distance in subpixel coordinates
-    pub dy: i64,
-    /// The primary distance measurement.
-    pub dist: i64,
-}
-
-/// Distance Interpolator v1.
-///
-/// This variant maintains a distance vector `(dx, dy)` representing the
-/// x and y distances in subpixel coordinates between two points, along
-/// with a distance value `dist`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct DistanceInterpolator1 {
-    /// X distance in subpixel coordinates
-    pub dx: i64,
-    /// Y distance in subpixel coordinates.
-    pub dy: i64,
-    /// Distance
-    pub dist: i64,
-}
-
-/// Distance Interpolator v2.
-///
-/// Provides additional control over the starting point, storing the initial
-/// `(dx_start, dy_start)` vector and `dist_start`. Useful when the interpolation
-/// requires a reference to starting conditions.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(super) struct DistanceInterpolator2 {
-    /// X distance in subpixel coordinates
-    pub dx: i64,
-    /// Y distance in subpixel coordinates
-    pub dy: i64,
-    /// Initial x-distance component.
-    pub dx_start: i64,
-    /// Initial y-distance component.
-    pub dy_start: i64,
-    /// Current distance.
-    pub dist: i64,
-    /// Initial distance.
-    pub dist_start: i64,
-}
-
-/// Distance Interpolator v3.
-///
-/// Adds end-point control, storing both starting and ending vectors
-/// (`dx_start`, `dy_start`, `dx_end`, `dy_end`) and distances `dist_start`
-/// and `dist_end`. Useful for bi-directional interpolations where both
-/// endpoints are known.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct DistanceInterpolator3 {
-    /// X distance in subpixel coordinates
-    pub dx: i64,
-    /// Y distance in subpixel coordinates
-    pub dy: i64,
-    /// Initial x-distance component.
-    pub dx_start: i64,
-    /// Initial y-distance component.
-    pub dy_start: i64,
-    /// Final x-distance component.
-    pub dx_end: i64,
-    /// Final y-distance component.
-    pub dy_end: i64,
-    /// Current distance.
-    pub dist: i64,
-    /// Initial distance.
-    pub dist_start: i64,
-    /// Final distance.
-    pub dist_end: i64,
-}
-
-/* implementations */
+impl_distance_interp![
+    DistanceInterpolator1,
+    DistanceInterpolator2,
+    DistanceInterpolator3,
+    DistanceInterpolator4
+];
 
 impl DistanceInterpolator00 {
     /// Creates a new `DistanceInterpolator00` instance.
@@ -249,17 +138,33 @@ impl DistanceInterpolator1 {
         Self { dist, dx, dy }
     }
 
-    /// Returns the x-distance `dx` in subpixel coordinates.
-    #[inline]
-    #[allow(dead_code)]
-    pub const fn dx(&self) -> i64 {
-        self.dx
+    /// Increments the x-distance by `dy`.
+    #[inline] #[rustfmt::skip]
+    pub fn inc_x_by(&mut self, dy: i64) {
+        self.dist += self.dy;
+        if dy > 0 { self.dist -= self.dx; }
+        if dy < 0 { self.dist += self.dx; }
     }
-    /// Returns the y-distance `dy` in subpixel coordinates.
-    #[inline]
-    #[allow(dead_code)]
-    pub const fn dy(&self) -> i64 {
-        self.dy
+    /// Decrements the x-distance by `dy`.
+    #[inline] #[rustfmt::skip]
+    pub fn dec_x_by(&mut self, dy: i64) {
+        self.dist -= self.dy;
+        if dy > 0 { self.dist -= self.dx; }
+        if dy < 0 { self.dist += self.dx; }
+    }
+    /// Increments the y-distance by `dx`.
+    #[inline] #[rustfmt::skip]
+    pub fn inc_y_by(&mut self, dx: i64) {
+        self.dist -= self.dx;
+        if dx > 0 { self.dist += self.dy; }
+        if dx < 0 { self.dist -= self.dy; }
+    }
+    /// Decrements the y-distance by `dx`.
+    #[inline] #[rustfmt::skip]
+    pub fn dec_y_by(&mut self, dx: i64) {
+        self.dist += self.dx;
+        if dx > 0 { self.dist += self.dy; }
+        if dx < 0 { self.dist -= self.dy; }
     }
 }
 
@@ -302,6 +207,31 @@ impl DistanceInterpolator2 {
         let dy_start = dy_start << POLY_MR_SUBPIXEL_SHIFT;
 
         Self { dx, dy, dx_start, dy_start, dist, dist_start }
+    }
+
+    pub fn inc_x_by(&mut self, dy: i64) {
+        self.dist += self.dy;
+        self.dist_start += self.dy_start;
+        iif![dy > 0; { self.dist -= self.dx; self.dist_start -= self.dx_start }];
+        iif![dy < 0; { self.dist += self.dx; self.dist_start += self.dx_start }];
+    }
+    pub fn dec_x_by(&mut self, dy: i64) {
+        self.dist -= self.dy;
+        self.dist_start -= self.dy_start;
+        iif![dy > 0; { self.dist -= self.dx; self.dist_start -= self.dx_start }];
+        iif![dy < 0; { self.dist += self.dx; self.dist_start += self.dx_start }];
+    }
+    pub fn inc_y_by(&mut self, dx: i64) {
+        self.dist -= self.dx;
+        self.dist_start -= self.dx_start;
+        iif![dx > 0; { self.dist += self.dy; self.dist_start += self.dy_start }];
+        iif![dx < 0; { self.dist -= self.dy; self.dist_start -= self.dy_start }];
+    }
+    pub fn dec_y_by(&mut self, dx: i64) {
+        self.dist += self.dx;
+        self.dist_start += self.dx_start;
+        iif![dx > 0; { self.dist += self.dy; self.dist_start += self.dy_start }];
+        iif![dx < 0; { self.dist -= self.dy; self.dist_start -= self.dy_start }];
     }
 }
 
@@ -346,154 +276,223 @@ impl DistanceInterpolator3 {
         let dy_end = dy_end << POLY_MR_SUBPIXEL_SHIFT;
         Self { dx, dy, dx_start, dy_start, dx_end, dy_end, dist_start, dist_end, dist }
     }
-}
 
-/* trait implementations */
-
-impl DistanceInterpolator for DistanceInterpolator1 {
-    #[inline] #[rustfmt::skip]
-    fn dist(&self) -> i64 { self.dist }
-    #[inline] #[rustfmt::skip]
-    fn inc_x(&mut self, dy: i64) {
-        self.dist += self.dy;
-        if dy > 0 { self.dist -= self.dx; }
-        if dy < 0 { self.dist += self.dx; }
-    }
-    #[inline] #[rustfmt::skip]
-    fn dec_x(&mut self, dy: i64) {
-        self.dist -= self.dy;
-        if dy > 0 { self.dist -= self.dx; }
-        if dy < 0 { self.dist += self.dx; }
-    }
-    #[inline] #[rustfmt::skip]
-    fn inc_y(&mut self, dx: i64) {
-        self.dist -= self.dx;
-        if dx > 0 { self.dist += self.dy; }
-        if dx < 0 { self.dist -= self.dy; }
-    }
-    #[inline] #[rustfmt::skip]
-    fn dec_y(&mut self, dx: i64) {
-        self.dist += self.dx;
-        if dx > 0 { self.dist += self.dy; }
-        if dx < 0 { self.dist -= self.dy; }
-    }
-}
-
-impl DistanceInterpolator for DistanceInterpolator2 {
-    #[inline] #[rustfmt::skip]
-    fn dist(&self) -> i64 { self.dist }
-    fn inc_x(&mut self, dy: i64) {
-        self.dist += self.dy;
-        self.dist_start += self.dy_start;
-        if dy > 0 {
-            self.dist -= self.dx;
-            self.dist_start -= self.dx_start;
-        }
-        if dy < 0 {
-            self.dist += self.dx;
-            self.dist_start += self.dx_start;
-        }
-    }
-    fn inc_y(&mut self, dx: i64) {
-        self.dist -= self.dx;
-        self.dist_start -= self.dx_start;
-        if dx > 0 {
-            self.dist += self.dy;
-            self.dist_start += self.dy_start;
-        }
-        if dx < 0 {
-            self.dist -= self.dy;
-            self.dist_start -= self.dy_start;
-        }
-    }
-    fn dec_x(&mut self, dy: i64) {
-        self.dist -= self.dy;
-        self.dist_start -= self.dy_start;
-        if dy > 0 {
-            self.dist -= self.dx;
-            self.dist_start -= self.dx_start;
-        }
-        if dy < 0 {
-            self.dist += self.dx;
-            self.dist_start += self.dx_start;
-        }
-    }
-    fn dec_y(&mut self, dx: i64) {
-        self.dist += self.dx;
-        self.dist_start += self.dx_start;
-        if dx > 0 {
-            self.dist += self.dy;
-            self.dist_start += self.dy_start;
-        }
-        if dx < 0 {
-            self.dist -= self.dy;
-            self.dist_start -= self.dy_start;
-        }
-    }
-}
-
-impl DistanceInterpolator for DistanceInterpolator3 {
-    #[inline]
-    fn dist(&self) -> i64 {
-        self.dist
-    }
-    fn inc_x(&mut self, dy: i64) {
+    pub fn inc_x_by(&mut self, dy: i64) {
         self.dist += self.dy;
         self.dist_start += self.dy_start;
         self.dist_end += self.dy_end;
+        #[allow(clippy::comparison_chain)]
         if dy > 0 {
             self.dist -= self.dx;
             self.dist_start -= self.dx_start;
             self.dist_end -= self.dx_end;
-        }
-        if dy < 0 {
+        } else if dy < 0 {
             self.dist += self.dx;
             self.dist_start += self.dx_start;
             self.dist_end += self.dx_end;
         }
     }
-    fn inc_y(&mut self, dx: i64) {
+    pub fn dec_x_by(&mut self, dy: i64) {
+        self.dist -= self.dy;
+        self.dist_start -= self.dy_start;
+        self.dist_end -= self.dy_end;
+        #[allow(clippy::comparison_chain)]
+        if dy > 0 {
+            self.dist -= self.dx;
+            self.dist_start -= self.dx_start;
+            self.dist_end -= self.dx_end;
+        } else if dy < 0 {
+            self.dist += self.dx;
+            self.dist_start += self.dx_start;
+            self.dist_end += self.dx_end;
+        }
+    }
+
+    pub fn inc_y_by(&mut self, dx: i64) {
         self.dist -= self.dx;
         self.dist_start -= self.dx_start;
         self.dist_end -= self.dx_end;
+        #[allow(clippy::comparison_chain)]
         if dx > 0 {
             self.dist += self.dy;
             self.dist_start += self.dy_start;
             self.dist_end += self.dy_end;
-        }
-        if dx < 0 {
+        } else if dx < 0 {
             self.dist -= self.dy;
             self.dist_start -= self.dy_start;
             self.dist_end -= self.dy_end;
         }
     }
-    fn dec_x(&mut self, dy: i64) {
-        self.dist -= self.dy;
-        self.dist_start -= self.dy_start;
-        self.dist_end -= self.dy_end;
-        if dy > 0 {
-            self.dist -= self.dx;
-            self.dist_start -= self.dx_start;
-            self.dist_end -= self.dx_end;
-        }
-        if dy < 0 {
-            self.dist += self.dx;
-            self.dist_start += self.dx_start;
-            self.dist_end += self.dx_end;
-        }
-    }
-    fn dec_y(&mut self, dx: i64) {
+    pub fn dec_y_by(&mut self, dx: i64) {
         self.dist += self.dx;
         self.dist_start += self.dx_start;
         self.dist_end += self.dx_end;
+        #[allow(clippy::comparison_chain)]
         if dx > 0 {
             self.dist += self.dy;
             self.dist_start += self.dy_start;
             self.dist_end += self.dy_end;
-        }
-        if dx < 0 {
+        } else if dx < 0 {
             self.dist -= self.dy;
             self.dist_start -= self.dy_start;
+            self.dist_end -= self.dy_end;
+        }
+    }
+}
+
+impl DistanceInterpolator4 {
+    /// Creates a new `DistanceInterpolator4` for multi-point interpolation.
+    ///
+    /// # Parameters
+    /// - `x1`, `y1`: Starting coordinates.
+    /// - `x2`, `y2`: Ending coordinates.
+    /// - `sx`, `sy`: Start transformation coordinates.
+    /// - `ex`, `ey`: End transformation coordinates.
+    /// - `len`: Length of the interpolation.
+    /// - `scale`: Scaling factor to adjust the length.
+    /// - `x`, `y`: Current coordinates for interpolation calculations.
+    #[allow(clippy::too_many_arguments)] #[rustfmt::skip]
+    pub fn new(
+        x1: i64, y1: i64, x2: i64, y2: i64, sx: i64, sy: i64,
+        ex: i64, ey: i64, len: i64, scale: f64, x: i64, y: i64,
+    ) -> Self {
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        let dx_start = line_mr(sx) - line_mr(x1);
+        let dy_start = line_mr(sy) - line_mr(y1);
+        let dx_end = line_mr(ex) - line_mr(x2);
+        let dy_end = line_mr(ey) - line_mr(y2);
+
+        let dist = ((x + POLY_SUBPIXEL_SCALE / 2 - x2) as f64 * dy as f64
+            - (y + POLY_SUBPIXEL_SCALE / 2 - y2) as f64 * dx as f64)
+            .round() as i64;
+
+        let dist_start = (line_mr(x + POLY_SUBPIXEL_SCALE / 2) - line_mr(sx)) * dy_start
+            - (line_mr(y + POLY_SUBPIXEL_SCALE / 2) - line_mr(sy)) * dx_start;
+        let dist_end = (line_mr(x + POLY_SUBPIXEL_SCALE / 2) - line_mr(ex)) * dy_end
+            - (line_mr(y + POLY_SUBPIXEL_SCALE / 2) - line_mr(ey)) * dx_end;
+        let len = (len as f64 / scale).round() as i64;
+        let d = len as f64 * scale;
+        let tdx = (((x2 - x1) << POLY_SUBPIXEL_SHIFT) as f64 / d).round() as i64;
+        let tdy = (((y2 - y1) << POLY_SUBPIXEL_SHIFT) as f64 / d).round() as i64;
+        let dx_pict = -tdy;
+        let dy_pict = tdx;
+        let dist_pict = ((x + POLY_SUBPIXEL_SCALE / 2 - (x1 - tdy)) * dy_pict
+            - (y + POLY_SUBPIXEL_SCALE / 2 - (y1 + tdx)) * dx_pict)
+            >> POLY_SUBPIXEL_SHIFT;
+        let dx = dx << POLY_SUBPIXEL_SHIFT;
+        let dy = dy << POLY_SUBPIXEL_SHIFT;
+        let dx_start = dx_start << POLY_MR_SUBPIXEL_SHIFT;
+        let dy_start = dy_start << POLY_MR_SUBPIXEL_SHIFT;
+        let dx_end = dx_end << POLY_MR_SUBPIXEL_SHIFT;
+        let dy_end = dy_end << POLY_MR_SUBPIXEL_SHIFT;
+
+        Self { dx, dy, dx_start, dx_end, dy_start, dy_end,
+            dx_pict, dy_pict, dist, dist_pict, dist_start, dist_end, len }
+    }
+
+    // /// Increments the x-axis distance values.
+    // pub fn inc_x(&mut self) {
+    //     self.dist += self.dy;
+    //     self.dist_start += self.dy_start;
+    //     self.dist_pict += self.dy_pict;
+    //     self.dist_end += self.dy_end;
+    // }
+    // /// Decrements the x-axis distance values.
+    // pub fn dec_x(&mut self) {
+    //     self.dist -= self.dy;
+    //     self.dist_start -= self.dy_start;
+    //     self.dist_pict -= self.dy_pict;
+    //     self.dist_end -= self.dy_end;
+    // }
+    // /// Increments the y-axis distance values.
+    // pub fn inc_y(&mut self) {
+    //     self.dist -= self.dx;
+    //     self.dist_start -= self.dx_start;
+    //     self.dist_pict -= self.dx_pict;
+    //     self.dist_end -= self.dx_end;
+    // }
+    // /// Decrements the y-axis distance values.
+    // pub fn dec_y(&mut self) {
+    //     self.dist += self.dx;
+    //     self.dist_start += self.dx_start;
+    //     self.dist_pict += self.dx_pict;
+    //     self.dist_end += self.dx_end;
+    // }
+
+    /// Incrementally adjusts x-axis values by a specific `dy` parameter.
+    pub fn inc_x_by(&mut self, dy: i64) {
+        self.dist += self.dy;
+        self.dist_start += self.dy_start;
+        self.dist_pict += self.dy_pict;
+        self.dist_end += self.dy_end;
+        #[allow(clippy::comparison_chain)]
+        if dy > 0 {
+            self.dist -= self.dx;
+            self.dist_start -= self.dx_start;
+            self.dist_pict -= self.dx_pict;
+            self.dist_end -= self.dx_end;
+        } else if dy < 0 {
+            self.dist += self.dx;
+            self.dist_start += self.dx_start;
+            self.dist_pict += self.dx_pict;
+            self.dist_end += self.dx_end;
+        }
+    }
+    /// Decrementally adjusts x-axis values by a specific `dy` parameter.
+    pub fn dec_x_by(&mut self, dy: i64) {
+        self.dist -= self.dy;
+        self.dist_start -= self.dy_start;
+        self.dist_pict -= self.dy_pict;
+        self.dist_end -= self.dy_end;
+        #[allow(clippy::comparison_chain)]
+        if dy > 0 {
+            self.dist -= self.dx;
+            self.dist_start -= self.dx_start;
+            self.dist_pict -= self.dx_pict;
+            self.dist_end -= self.dx_end;
+        } else if dy < 0 {
+            self.dist += self.dx;
+            self.dist_start += self.dx_start;
+            self.dist_pict += self.dx_pict;
+            self.dist_end += self.dx_end;
+        }
+    }
+    /// Incrementally adjusts y-axis values by a specific `dx` parameter.
+    pub fn inc_y_by(&mut self, dx: i64) {
+        self.dist -= self.dx;
+        self.dist_start -= self.dx_start;
+        self.dist_pict -= self.dx_pict;
+        self.dist_end -= self.dx_end;
+        #[allow(clippy::comparison_chain)]
+        if dx > 0 {
+            self.dist += self.dy;
+            self.dist_start += self.dy_start;
+            self.dist_pict += self.dy_pict;
+            self.dist_end += self.dy_end;
+        } else if dx < 0 {
+            self.dist -= self.dy;
+            self.dist_start -= self.dy_start;
+            self.dist_pict -= self.dy_pict;
+            self.dist_end -= self.dy_end;
+        }
+    }
+    /// Decrementally adjusts y-axis values by a specific `dx` parameter.
+    pub fn dec_y_by(&mut self, dx: i64) {
+        self.dist += self.dx;
+        self.dist_start += self.dx_start;
+        self.dist_pict += self.dx_pict;
+        self.dist_end += self.dx_end;
+        #[allow(clippy::comparison_chain)]
+        if dx > 0 {
+            self.dist += self.dy;
+            self.dist_start += self.dy_start;
+            self.dist_pict += self.dy_pict;
+            self.dist_end += self.dy_end;
+        } else if dx < 0 {
+            self.dist -= self.dy;
+            self.dist_start -= self.dy_start;
+            self.dist_pict -= self.dy_pict;
             self.dist_end -= self.dy_end;
         }
     }
