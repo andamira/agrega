@@ -1,3 +1,5 @@
+// agrega::paths::stroke
+//
 //! Path Stroking
 //!
 //! # Examples
@@ -898,3 +900,12 @@ fn last_line_to(v: &[Vertex<f64>]) -> Option<usize> {
     }
     None
 }
+
+// #[derive(Debug,PartialEq,Copy,Clone)]
+// pub enum LineJoin { // MAYBE
+//     Round,
+//     None,
+//     Miter,
+//     MiterAccurate,
+// }
+//

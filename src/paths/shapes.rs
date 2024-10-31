@@ -1,9 +1,9 @@
 // agrega::paths::shapes
 
-use super::{Path, PathCommand, VertexSource, Vertex};
-use devela::iif;
-use core::f64::consts::PI;
+use super::{Path, PathCommand, Vertex, VertexSource};
 use alloc::vec::Vec;
+use core::f64::consts::PI;
+use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 

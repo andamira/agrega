@@ -4,9 +4,9 @@
 
 use crate::{
     len_i64_xy, ClipSide, Color, DistanceInterpolator4, DrawOutline, LineInterpolator,
-    LineParameters, Pixel, PixelSource, Pixfmt, RasterizerScanline, Rectangle, Render,
-    RenderingBase, Rgba8, ScanlineU8, SpanGradient, Subpixel, VertexSource, MAX_HALF_WIDTH,
-    POLY_SUBPIXEL_MASK, POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
+    LineParameters, Pixel, PixelSource, Pixfmt, RasterizerScanline, Rectangle, RenderingBase,
+    Rgba8, ScanlineU8, SpanGradient, Subpixel, VertexSource, MAX_HALF_WIDTH, POLY_SUBPIXEL_MASK,
+    POLY_SUBPIXEL_SCALE, POLY_SUBPIXEL_SHIFT,
 };
 use alloc::{vec, vec::Vec};
 use devela::iif;
@@ -19,6 +19,21 @@ pub(crate) const LINE_MAX_LENGTH: i64 = 1 << (POLY_SUBPIXEL_SHIFT + 10);
     fn upscale(v: f64)   -> T;
     fn downscale(v: i64) -> T;
 }*/
+
+/// Render scanlines to Image
+#[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
+#[cfg_attr(
+    feature = "nightly",
+    doc(cfg(any(feature = "std", all(feature = "no_std", feature = "alloc"))))
+)]
+pub trait Render {
+    /// Render a single scanlines to the image
+    fn render(&mut self, data: &RenderData);
+    /// Set the Color of the Renderer
+    fn color<C: Color>(&mut self, color: C);
+    /// Prepare the Renderer
+    fn prepare(&self) {}
+}
 
 /// Aliased Renderer
 #[derive(Debug)]

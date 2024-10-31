@@ -1,7 +1,7 @@
 use super::{PixelSource, Pixfmt};
 use crate::{color::*, util::*};
 #[cfg(feature = "std")]
-use {std::path::Path, crate::file::write_file};
+use {crate::file::write_file, std::path::Path};
 
 macro_rules! impl_pixel_common {
     () => {
@@ -182,7 +182,6 @@ pub trait Pixel {
         }
     }
 
-    
     /// Blends a horizontal span of pixels from `(x, y)`
     /// for `len` pixels with `colors` and either `covers` or `cover`.
     ///
@@ -309,13 +308,7 @@ impl Pixel for Pixfmt<Rgba8> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        write_file(
-            self.as_bytes(),
-            self.width(),
-            self.height(),
-            filename,
-            image::ColorType::Rgba8,
-        )
+        write_file(self.as_bytes(), self.width(), self.height(), filename, image::ColorType::Rgba8)
     }
 }
 
@@ -366,13 +359,7 @@ impl Pixel for Pixfmt<Rgb8> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        write_file(
-            self.as_bytes(),
-            self.width(),
-            self.height(),
-            filename,
-            image::ColorType::Rgb8,
-        )
+        write_file(self.as_bytes(), self.width(), self.height(), filename, image::ColorType::Rgb8)
     }
 }
 
@@ -426,13 +413,7 @@ impl Pixel for Pixfmt<Rgba8pre> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        write_file(
-            self.as_bytes(),
-            self.width(),
-            self.height(),
-            filename,
-            image::ColorType::Rgba8,
-        )
+        write_file(self.as_bytes(), self.width(), self.height(), filename, image::ColorType::Rgba8)
     }
 }
 
@@ -494,13 +475,7 @@ impl Pixel for Pixfmt<Rgba32> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        write_file(
-            self.as_bytes(),
-            self.width(),
-            self.height(),
-            filename,
-            image::ColorType::Rgba8,
-        )
+        write_file(self.as_bytes(), self.width(), self.height(), filename, image::ColorType::Rgba8)
     }
 }
 
@@ -548,12 +523,6 @@ impl Pixel for Pixfmt<Gray8> {
     #[cfg(feature = "std")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "std")))]
     fn to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), image::ImageError> {
-        write_file(
-            self.as_bytes(),
-            self.width(),
-            self.height(),
-            filename,
-            image::ColorType::L8,
-        )
+        write_file(self.as_bytes(), self.width(), self.height(), filename, image::ColorType::L8)
     }
 }

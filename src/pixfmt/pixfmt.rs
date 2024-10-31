@@ -1,10 +1,10 @@
 //
 
 use super::buffer::RenderingBuffer;
-use crate::{color::*, util::*, Color, Pixel, PixelSource};
-use devela::{iif, PhantomData, Vec};
 #[cfg(feature = "std")]
 use crate::file::read_file;
+use crate::{color::*, util::*, Color, Pixel, PixelSource};
+use devela::{iif, PhantomData, Vec};
 
 /// Pixel format wrapper around raw pixel component data.
 ///

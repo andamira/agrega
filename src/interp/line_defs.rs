@@ -13,6 +13,7 @@
 // - struct DrawVars
 
 use super::{DistanceInterpolator1, DistanceInterpolator2, DistanceInterpolator3};
+use devela::Vec;
 
 /// Line Parameters.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -164,3 +165,11 @@ pub(crate) struct DrawVars {
     pub yb2: i64,
     pub flags: u8,
 }
+
+// #[derive(Debug,PartialEq,Copy,Clone)]
+// pub enum LineJoin { // MAYBE
+//     Round,
+//     None,
+//     Miter,
+//     MiterAccurate,
+// }

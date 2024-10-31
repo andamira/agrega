@@ -1,6 +1,6 @@
 // agrega::font::label
 
-use crate::{_dep::freetype, Pixel, RenderingBase, Rgba8};
+use crate::{Pixel, RenderingBase, Rgba8, _dep::freetype};
 use alloc::{
     string::{String, ToString},
     vec::Vec,

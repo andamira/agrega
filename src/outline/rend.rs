@@ -46,7 +46,8 @@ impl<'a, T: Pixel> RendererOutline<'a, T> {
     /* private */
 
     /// Converts a floating-point coordinate to `Subpixel` units.
-    #[inline] #[must_use]
+    #[inline]
+    #[must_use]
     pub(crate) fn coord(&self, c: f64) -> Subpixel {
         Subpixel::from((c * POLY_SUBPIXEL_SCALE as f64).round() as i64)
     }

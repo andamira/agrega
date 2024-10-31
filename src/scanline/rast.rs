@@ -312,11 +312,18 @@ pub(crate) fn len_i64_xy(x1: i64, y1: i64, x2: i64, y2: i64) -> i64 {
     (dx * dx + dy * dy).sqrt().round() as i64
 }
 
-// /// MAYBE
-// #[derive(Debug,PartialEq,Copy,Clone)]
-// pub enum LineJoin {
-//     Round,
-//     None,
-//     Miter,
-//     MiterAccurate,
+// /// Rasterize lines, path, and other things to scanlines
+// pub trait Rasterize { // MAYBE
+//     /// Setup Rasterizer, returns if data is available
+//     fn rewind_scanlines(&mut self) -> bool;
+//     /// Sweeps cells in a scanline for data, returns if data is available
+//     fn sweep_scanline(&mut self, sl: &mut ScanlineU8) -> bool;
+//     /// Return maximum x value of rasterizer
+//     fn min_x(&self) -> i64;
+//     /// Return maximum x value of rasterizer
+//     fn max_x(&self) -> i64;
+//     /// Resets the rasterizer, clearing content
+//     fn reset(&mut self);
+//     /// Rasterize a path
+//     fn add_path<VS: VertexSource>(&mut self, path: &VS);
 // }

@@ -23,23 +23,23 @@ compile_error!("You can't enable `safe` and `unsafe*` features at the same time.
 // allows a group of items to share the same cfg options
 #[allow(unused_macros)]
 macro_rules! items { ( $($item:item)* ) => { $($item)* }; }
+use items;
 
 /* modules ordered first by feature-bounds */
 
-mod traits;
 mod util;
 #[doc(hidden)]
 #[allow(unused_imports)]
-pub use {traits::*, util::*};
+pub use util::*;
 
 #[cfg(feature = "alloc")]
 items! {
     mod cell;
-    mod clip;
+    pub mod paths;
     pub mod scanline;
     #[doc(hidden)]
     #[allow(unused_imports)]
-    pub use {cell::*, clip::*, scanline::*};
+    pub use {cell::*, paths::*, scanline::*};
 }
 #[cfg(any(feature = "std", feature = "no_std"))]
 items! {
@@ -53,18 +53,12 @@ items! {
     mod base;
     pub mod interp;
     pub mod outline;
-    pub mod paths;
     pub mod pixfmt;
-    pub mod stroke;
     pub mod text;
-    pub mod transform;
 
     #[doc(hidden)]
     #[allow(unused_imports)]
-    pub use {
-        alphamask::*, base::*, interp::*, outline::*, paths::*,  pixfmt::*,
-        stroke::*, text::*, transform::*,
-    };
+    pub use {alphamask::*, base::*, interp::*, outline::*,  pixfmt::*, text::*};
 }
 
 #[cfg(feature = "std")]
@@ -78,11 +72,11 @@ items! {
 /// All items are flat re-exported here.<br/><hr>
 pub mod all {
     #[doc(inline)]
-    pub use super::{traits::*, util::*};
+    pub use super::util::*;
 
     #[doc(inline)]
     #[cfg(feature = "alloc")]
-    pub use super::scanline::*;
+    pub use super::{paths::*, scanline::*};
 
     #[doc(inline)]
     #[cfg(any(feature = "std", feature = "no_std"))]
@@ -91,10 +85,7 @@ pub mod all {
     #[doc(inline)]
     #[allow(unused_imports)]
     #[cfg(any(feature = "std", all(feature = "no_std", feature = "alloc")))]
-    pub use super::{
-        alphamask::*, base::*, clip::*, interp::*, outline::*, paths::*, pixfmt::*, stroke::*,
-        text::*, transform::*,
-    };
+    pub use super::{alphamask::*, base::*, interp::*, outline::*, pixfmt::*, text::*};
 
     #[doc(inline)]
     #[cfg(feature = "std")]

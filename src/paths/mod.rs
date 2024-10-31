@@ -3,6 +3,7 @@
 // TOC
 // - enum PathOrientation
 // - enum PathCommand
+// - trait VertexSource
 // - struct Vertex
 // - struct Path
 // - fn arrange_orientations
@@ -10,14 +11,21 @@
 // - fn perceive_polygon_orientation
 // - fn bounding_rect
 
-use crate::{Rectangle, Transform, VertexSource};
 use alloc::{vec, vec::Vec};
 use devela::iif;
 #[allow(unused_imports)]
 use devela::ExtFloat;
 
-mod shapes;
-pub use shapes::*;
+mod clip;
+mod transform;
+pub use {clip::*, transform::*};
+
+#[cfg(any(feature = "std", feature = "no_std"))]
+crate::items! {
+    mod shapes;
+    mod stroke;
+    pub use {shapes::*, stroke::*};
+}
 
 /// Represents the orientation of a polygon path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -47,6 +55,18 @@ pub enum PathCommand {
     //Catrom,
     //UBSpline,
     //EndPoly,
+}
+
+/// A source of vertex points.
+pub trait VertexSource {
+    // /// Rewind the vertex source (unused)
+    // fn rewind(&self) {}
+
+    /// Get the cloned values from the source.
+    ///
+    /// This could be turned into an iterator
+    #[must_use]
+    fn xconvert(&self) -> alloc::vec::Vec<Vertex<f64>>;
 }
 
 /// A vertex in the path with coordinates `(x, y)` and an associated [`PathCommand`].
